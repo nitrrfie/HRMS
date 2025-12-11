@@ -154,6 +154,53 @@ const seedUsers = async () => {
             console.log('Accountant user already exists');
         }
         
+        const existingFacultyInCharge = await User.findOne({ username: 'anuj' });
+        
+        if (!existingFacultyInCharge) {
+            await User.create({
+                employeeId: 'NITR-FIC-001',
+                username: 'anuj',
+                email: 'facultyincharge@nitrrfie.com',
+                password: 'anuj',
+                role: 'FACULTY_IN_CHARGE',
+                profile: {
+                    firstName: 'Anuj',
+                    lastName: 'Shukla',
+                    phone: '9136271032',
+                    address: {
+                        street: 'NIT Raipur Campus',
+                        city: 'Raipur',
+                        state: 'Chhattisgarh',
+                        pincode: '492010'
+                    },
+                    dateOfBirth: new Date('1988-03-20'),
+                    gender: 'Male'
+                },
+                employment: {
+                    designation: 'FACULTY_IN_CHARGE',
+                    department: 'NITRRFIE',
+                    joiningDate: new Date('2022-01-15'),
+                    employmentType: 'Full-time',
+                    salary: {
+                        basic: 60000,
+                        hra: 25000,
+                        allowances: 15000,
+                        deductions: 0
+                    }
+                },
+                leaveBalance: {
+                    casualLeave: 12,
+                    onDutyLeave: 15,
+                    leaveWithoutPay: 0
+                }
+            });
+            console.log('Faculty In Charge user created successfully');
+            console.log('Username: anuj');
+            console.log('Password: anuj');
+        } else {
+            console.log('Faculty In Charge user already exists');
+        }
+        
         process.exit(0);
     } catch (error) {
         console.error('Error seeding users:', error.message);
