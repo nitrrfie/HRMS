@@ -226,8 +226,9 @@ const Dashboard = ({ onLogout }) => {
       case "salary":
         return <Salary />;
       case "peer-rating":
-        if(role !== "FACULTY_IN_CHARGE")
-            return <PeerRating />;
+        return <PeerRating />;
+      case "variable-remuneration":
+        return <VariableRemuneration />;
       case "efiling":
         return <EFiling />;
       case "settings":
@@ -310,6 +311,17 @@ const Dashboard = ({ onLogout }) => {
               >
                 <Star size={20} />
                 {isSidebarOpen && <span>Peer Rating</span>}
+              </button>
+            )}
+            {isManagerLevel && role === "FACULTY_IN_CHARGE" && (
+              <button
+                className={`nav-item ${
+                  activeView === "variable-remuneration" ? "active" : ""
+                }`}
+                onClick={() => setActiveView("variable-remuneration")}
+              >
+                <Star size={20} />
+                {isSidebarOpen && <span>Variable Remuneration</span>}
               </button>
             )}
             {isManagerLevel && (
