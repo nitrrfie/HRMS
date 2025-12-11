@@ -38,7 +38,10 @@ const PeerRating = () => {
 
                 // Filter out current user (can't rate themselves)
                 const otherEmployees = usersData.users
-                    .filter(emp => emp._id !== user?.id && emp.username !== user?.username)
+                    .filter(emp => emp._id !== user?.id 
+                        && emp.username !== user?.username &&
+                        emp.role !== 'FACULTY_IN_CHARGE'
+                     )
                     .map(emp => ({
                         id: emp._id,
                         name: emp.profile?.firstName
