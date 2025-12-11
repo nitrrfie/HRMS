@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react';
-import { Download } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { usersAPI } from '../services/api';
+import { usersAPI, peerRatingAPI } from '../services/api';
 import './PeerRating.css';
 
 const PeerRating = () => {
     const { user } = useAuth();
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
 
     // Get current month and year
     const currentDate = new Date();
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
-                        'July', 'August', 'September', 'October', 'November', 'December'];
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'];
     const currentMonth = monthNames[currentDate.getMonth()];
     const currentYear = currentDate.getFullYear();
 
@@ -22,24 +22,36 @@ const PeerRating = () => {
 
     const fetchEmployees = async () => {
         try {
-            const data = await usersAPI.getForPeerRating();
-            if (data.success && data.users) {
+            const [usersData, ratingsData] = await Promise.all([
+                usersAPI.getForPeerRating(),
+                peerRatingAPI.getMyRatings(currentMonth, currentYear)
+            ]);
+
+            if (usersData.success && usersData.users) {
+                // Create a map of saved ratings for easy lookup
+                const savedRatingsMap = {};
+                if (ratingsData.success && ratingsData.ratings) {
+                    ratingsData.ratings.forEach(rating => {
+                        savedRatingsMap[rating.ratedEmployee] = rating;
+                    });
+                }
+
                 // Filter out current user (can't rate themselves)
-                const otherEmployees = data.users
+                const otherEmployees = usersData.users
                     .filter(emp => emp._id !== user?.id && emp.username !== user?.username)
                     .map(emp => ({
                         id: emp._id,
-                        name: emp.profile?.firstName 
+                        name: emp.profile?.firstName
                             ? `${emp.profile.gender === 'Male' ? 'Mr.' : 'Mrs.'} ${emp.profile.firstName} ${emp.profile.lastName || ''}`
                             : emp.username,
                         designation: emp.employment?.designation || emp.role,
-                        responsiveness: '',
-                        teamSpirit: ''
+                        responsiveness: savedRatingsMap[emp._id]?.responsiveness || '',
+                        teamSpirit: savedRatingsMap[emp._id]?.teamSpirit || ''
                     }));
                 setEmployees(otherEmployees);
             }
         } catch (error) {
-            console.error('Failed to fetch employees:', error);
+            console.error('Failed to fetch data:', error);
         } finally {
             setLoading(false);
         }
@@ -61,141 +73,33 @@ const PeerRating = () => {
         ));
     };
 
-    const handleDownloadPDF = () => {
-        const printWindow = window.open('', '_blank');
-        
-        const tableRows = employees.map((emp, index) => `
-            <tr>
-                <td>${index + 1}</td>
-                <td class="name-cell">
-                    <div class="emp-name">${emp.name}</div>
-                    <div class="emp-designation">${emp.designation}</div>
-                </td>
-                <td>${emp.responsiveness || ''}</td>
-                <td>${emp.teamSpirit || ''}</td>
-                <td>${calculateTotalScore(emp)}</td>
-            </tr>
-        `).join('');
+    const handleSave = async () => {
+        setSaving(true);
+        try {
+            const ratings = employees.map(emp => ({
+                employeeId: emp.id,
+                responsiveness: emp.responsiveness === '' ? 0 : emp.responsiveness,
+                teamSpirit: emp.teamSpirit === '' ? 0 : emp.teamSpirit
+            }));
 
-        printWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Peer Rating - NITRRFIE</title>
-                <style>
-                    * {
-                        margin: 0;
-                        padding: 0;
-                        box-sizing: border-box;
-                    }
-                    body {
-                        font-family: 'Times New Roman', Times, serif;
-                        font-size: 14px;
-                        line-height: 1.5;
-                        color: #000;
-                        background: #fff;
-                        padding: 40px 50px;
-                    }
-                    .header {
-                        text-align: center;
-                        margin-bottom: 30px;
-                    }
-                    .header h1 {
-                        font-size: 18px;
-                        font-weight: bold;
-                        margin-bottom: 10px;
-                    }
-                    .header h2 {
-                        font-size: 16px;
-                        font-weight: bold;
-                        margin-bottom: 5px;
-                    }
-                    .rating-table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        margin-bottom: 40px;
-                    }
-                    .rating-table th,
-                    .rating-table td {
-                        border: 1px solid #000;
-                        padding: 12px 10px;
-                        text-align: center;
-                        vertical-align: middle;
-                    }
-                    .rating-table th {
-                        background: #f5f5f5;
-                        font-weight: bold;
-                        font-size: 13px;
-                    }
-                    .name-cell {
-                        text-align: center;
-                    }
-                    .emp-name {
-                        font-weight: 600;
-                        margin-bottom: 2px;
-                    }
-                    .emp-designation {
-                        font-size: 12px;
-                        color: #555;
-                    }
-                    .signature-section {
-                        display: flex;
-                        justify-content: flex-end;
-                        margin-top: 60px;
-                        padding-right: 30px;
-                    }
-                    .signature {
-                        text-align: center;
-                        font-weight: bold;
-                    }
-                    .signature p {
-                        margin: 0;
-                        line-height: 1.6;
-                    }
-                    @media print {
-                        body {
-                            padding: 20px 30px;
-                        }
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <h1>NIT Raipur Foundation for Innovation & Entrepreneurship (NITRR-FIE)</h1>
-                    <h2>Peer Rating of Colleagues for the Month ${currentMonth} ${currentYear}</h2>
-                </div>
-                
-                <table class="rating-table">
-                    <thead>
-                        <tr>
-                            <th>S. No.</th>
-                            <th>Name</th>
-                            <th>Responsiveness<br/>(Out of 10)</th>
-                            <th>Team Spirit<br/>(Out of 10)</th>
-                            <th>Total Score<br/>(Out of 20)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${tableRows}
-                    </tbody>
-                </table>
-                
-                <div class="signature-section">
-                    <div class="signature">
-                        <p>Accountant Cum Administrator</p>
-                        <p>NITRR-FIE</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-        `);
-        
-        printWindow.document.close();
-        
-        setTimeout(() => {
-            printWindow.print();
-        }, 500);
+            console.log('Sending ratings:', ratings); // Debug log
+
+            const response = await peerRatingAPI.save(ratings, currentMonth, currentYear);
+            console.log('Save response:', response); // Debug log
+
+            if (response.success) {
+                alert('Ratings saved successfully!');
+            } else {
+                alert(response.message || 'Failed to save ratings');
+            }
+        } catch (error) {
+            console.error('Failed to save ratings:', error);
+            alert('Failed to save ratings. Please try again.');
+        } finally {
+            setSaving(false);
+        }
     };
+
 
     if (loading) {
         return (
@@ -272,16 +176,16 @@ const PeerRating = () => {
 
             <div className="rating-footer">
                 <div className="signature-section">
-                    <div className="signature">
-                        <p>Accountant Cum Administrator</p>
-                        <p>NITRR-FIE</p>
-                    </div>
+                    {/* Signature removed as per request */}
                 </div>
-                
-                <div className="download-section">
-                    <button className="download-btn" onClick={handleDownloadPDF}>
-                        <Download size={18} />
-                        Download as PDF
+
+                <div className="action-buttons">
+                    <button
+                        className="save-btn"
+                        onClick={handleSave}
+                        disabled={saving || employees.length === 0}
+                    >
+                        {saving ? 'Saving...' : 'Save Ratings'}
                     </button>
                 </div>
             </div>

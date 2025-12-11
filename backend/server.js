@@ -22,6 +22,7 @@ app.use('/api/attendance', require('./routes/attendance'));
 app.use('/api/leave', require('./routes/leave'));
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/efiling', require('./routes/efiling'));
+app.use('/api/peer-rating', require('./routes/peerRating'));
 
 app.get('/', (req, res) => {
     res.json({ message: 'HRMS API - NITRRFIE' });
