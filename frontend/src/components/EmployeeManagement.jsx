@@ -160,10 +160,10 @@ const EmployeeManagement = () => {
                                 <input type="password" placeholder="Password *" value={newEmployee.password} onChange={(e) => setNewEmployee({...newEmployee, password: e.target.value})} />
                                 <select value={newEmployee.role} onChange={(e) => setNewEmployee({...newEmployee, role: e.target.value})}>
                                     <option value="EMPLOYEE">EMPLOYEE</option>
-                                    <option value="Incubation_Manager">Incubation Manager</option>
-                                    <option value="Accountant">Accountant</option>
-                                    <option value="Officer_In_Charge">Officer In Charge</option>
-                                    <option value="Faculty_In_Charge">Faculty In Charge</option>
+                                    <option value="INCUBATION_MANAGER">INCUBATION MANAGER</option>
+                                    <option value="ACCOUNTANT">ACCOUNTANT</option>
+                                    <option value="OFFICER_IN_CHARGE">OFFICER IN CHARGE</option>
+                                    <option value="FACULTY_IN_CHARGE">FACULTY IN CHARGE</option>
                                 </select>
                             </div>
                             <div className="form-row">

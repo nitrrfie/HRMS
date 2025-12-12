@@ -91,7 +91,7 @@
 .filter-dropdown {
     display: flex;
     align-items: center;
-    background: rgba(0, 0, 0, 0.2);
+    background: linear-gradient(135deg, #14b8a6, #10b981);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 10px;
     padding: 0.5rem 1rem;
@@ -130,9 +130,9 @@
 }
 
 .emp-card {
-    background: rgba(255, 255, 255, 0.04);
+    background: white;
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid #ff6600;
     border-radius: 20px;
     padding: 1.5rem;
     display: flex;
@@ -146,7 +146,7 @@
     transform: translateY(-5px);
     background: rgba(255, 255, 255, 0.07);
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-    border-color: rgba(255, 255, 255, 0.15);
+    border-color: #e56713;
 }
 
 .card-top {
@@ -191,7 +191,7 @@
 .more-btn {
     background: transparent;
     border: none;
-    color: rgba(255, 255, 255, 0.5);
+    color: black;
     cursor: pointer;
     padding: 0.25rem;
     border-radius: 50%;
@@ -200,7 +200,7 @@
 
 .more-btn:hover {
     background: rgba(255, 255, 255, 0.1);
-    color: #fff;
+    color: black;
 }
 
 .emp-profile {
@@ -228,7 +228,7 @@
 .emp-profile h3 {
     font-size: 1.25rem;
     margin: 0 0 0.25rem 0;
-    color: #fff;
+    color: black;
     text-align: center;
 }
 
@@ -253,11 +253,11 @@
     align-items: center;
     gap: 0.75rem;
     font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.8);
+    color: gray;
 }
 
 .detail-row svg {
-    color: rgba(255, 255, 255, 0.5);
+    color: black;
     min-width: 16px;
 }
 
@@ -268,8 +268,8 @@
 .view-btn {
     width: 100%;
     background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #fff;
+    border: 1px solid #ff6600;
+    color: black;
     padding: 0.75rem;
     border-radius: 8px;
     font-weight: 500;
@@ -279,7 +279,8 @@
 }
 
 .view-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: #db5b07;
+    color: white;
     border-color: rgba(255, 255, 255, 0.2);
 }
 
