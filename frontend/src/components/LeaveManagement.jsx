@@ -1,113 +1,181 @@
-import { useState, useRef, useEffect } from 'react';
-import { Check, X, Clock, Calendar, FileText, User, Send, UserCheck, Printer } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { leaveAPI } from '../services/api';
-import './LeaveManagement.css';
+import { useState, useRef, useEffect } from "react";
+import {
+  Check,
+  X,
+  Clock,
+  Calendar,
+  FileText,
+  User,
+  Send,
+  UserCheck,
+  Printer,
+} from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { leaveAPI, usersAPI } from "../services/api";
+import "./LeaveManagement.css";
 
 const LeaveManagement = () => {
-    const { user } = useAuth();
-    const [activeTab, setActiveTab] = useState('apply');
-    const formRef = useRef(null);
-    const [loading, setLoading] = useState(false);
-    const [requests, setRequests] = useState([]);
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState("apply");
+  const formRef = useRef(null);
+  const [loading, setLoading] = useState(false);
+  const [requests, setRequests] = useState([]);
+  const [availableUsers, setAvailableUsers] = useState([]);
 
-    const [formData, setFormData] = useState({
-        name: user?.profile?.firstName ? `${user.profile.firstName} ${user.profile.lastName || ''}` : user?.username || '',
-        designation: user?.employment?.designation || '',
-        leaveType: 'Casual Leave',
-        startDate: '',
-        endDate: '',
-        numberOfDays: '',
-        contactNo: user?.profile?.phone || '',
-        reason: '',
-        personInCharge: ''
-    });
+  const [formData, setFormData] = useState({
+    name: user?.profile?.firstName
+      ? `${user.profile.firstName} ${user.profile.lastName || ""}`
+      : user?.username || "",
+    designation: user?.employment?.designation || "",
+    leaveType: "Casual Leave",
+    startDate: "",
+    endDate: "",
+    numberOfDays: "",
+    contactNo: user?.profile?.phone || "",
+    reason: "",
+    reportingToId: "",
+    reportingToName: "",
+    personInCharge: "",
+  });
 
-    useEffect(() => {
+  useEffect(() => {
+    fetchLeaveRequests();
+  }, [activeTab]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      // This endpoint is accessible to all authenticated users in this app.
+      const data = await usersAPI.getForPeerRating();
+      if (data.success) {
+        const currentUserId = user?.id;
+        const users = (data.users || [])
+          .filter((u) => String(u._id) !== String(currentUserId))
+          .map((u) => ({
+            id: u._id,
+            name: u?.profile?.firstName
+              ? `${u.profile.firstName} ${u.profile.lastName || ""}`.trim()
+              : u.username || "Unknown",
+          }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+        setAvailableUsers(users);
+      }
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+    }
+  };
+
+  const fetchLeaveRequests = async () => {
+    try {
+      const data =
+        activeTab === "requests"
+          ? await leaveAPI.getPending()
+          : await leaveAPI.getMy();
+      if (data.success) {
+        setRequests(data.leaves || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch leaves:", error);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleReportingToChange = (e) => {
+    const selectedId = e.target.value;
+    const selectedUser = availableUsers.find(
+      (u) => String(u.id) === String(selectedId)
+    );
+
+    setFormData((prev) => ({
+      ...prev,
+      reportingToId: selectedId,
+      reportingToName: selectedUser?.name || "",
+    }));
+  };
+
+  const handleSubmit = async () => {
+    if (
+      !formData.startDate ||
+      !formData.endDate ||
+      !formData.numberOfDays ||
+      !formData.reason ||
+      !formData.reportingToId ||
+      !formData.personInCharge
+    ) {
+      alert("Please fill all required fields");
+      return;
+    }
+    setLoading(true);
+    try {
+      const data = await leaveAPI.apply({
+        leaveType: formData.leaveType,
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        numberOfDays: parseInt(formData.numberOfDays),
+        reason: formData.reason,
+        contactNo: formData.contactNo,
+        personInCharge: formData.personInCharge,
+        reportingToId: formData.reportingToId,
+      });
+      if (data.success) {
+        alert("Leave application submitted successfully!");
+        setFormData({
+          name: user?.profile?.firstName
+            ? `${user.profile.firstName} ${user.profile.lastName || ""}`
+            : user?.username || "",
+          designation: user?.employment?.designation || "",
+          leaveType: "Casual Leave",
+          startDate: "",
+          endDate: "",
+          numberOfDays: "",
+          contactNo: user?.profile?.phone || "",
+          reason: "",
+          reportingToId: "",
+          reportingToName: "",
+          personInCharge: "",
+        });
         fetchLeaveRequests();
-    }, [activeTab]);
+      } else {
+        alert(data.message || "Failed to submit leave application");
+      }
+    } catch (error) {
+      alert("Failed to submit leave application");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const fetchLeaveRequests = async () => {
-        try {
-            const data = activeTab === 'requests' 
-                ? await leaveAPI.getPending()
-                : await leaveAPI.getMy();
-            if (data.success) {
-                setRequests(data.leaves || []);
-            }
-        } catch (error) {
-            console.error('Failed to fetch leaves:', error);
-        }
-    };
+  const handleStatusChange = async (id, newStatus) => {
+    setLoading(true);
+    try {
+      const data =
+        newStatus === "approved"
+          ? await leaveAPI.approve(id, "Approved")
+          : await leaveAPI.reject(id, "Rejected");
+      if (data.success) {
+        fetchLeaveRequests();
+      } else {
+        alert(data.message || "Failed to update leave status");
+      }
+    } catch (error) {
+      alert("Failed to update leave status");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-    };
+  const handlePrint = () => {
+    const printContent = formRef.current;
+    const printWindow = window.open("", "_blank");
 
-    const handleSubmit = async () => {
-        if (!formData.startDate || !formData.endDate || !formData.numberOfDays || !formData.reason) {
-            alert('Please fill all required fields');
-            return;
-        }
-        setLoading(true);
-        try {
-            const data = await leaveAPI.apply({
-                leaveType: formData.leaveType,
-                startDate: formData.startDate,
-                endDate: formData.endDate,
-                numberOfDays: parseInt(formData.numberOfDays),
-                reason: formData.reason,
-                contactNo: formData.contactNo,
-                personInCharge: formData.personInCharge
-            });
-            if (data.success) {
-                alert('Leave application submitted successfully!');
-                setFormData({
-                    name: user?.profile?.firstName ? `${user.profile.firstName} ${user.profile.lastName || ''}` : user?.username || '',
-                    designation: user?.employment?.designation || '',
-                    leaveType: 'Casual Leave',
-                    startDate: '',
-                    endDate: '',
-                    numberOfDays: '',
-                    contactNo: user?.profile?.phone || '',
-                    reason: '',
-                    personInCharge: ''
-                });
-                fetchLeaveRequests();
-            } else {
-                alert(data.message || 'Failed to submit leave application');
-            }
-        } catch (error) {
-            alert('Failed to submit leave application');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleStatusChange = async (id, newStatus) => {
-        setLoading(true);
-        try {
-            const data = newStatus === 'approved' 
-                ? await leaveAPI.approve(id, 'Approved')
-                : await leaveAPI.reject(id, 'Rejected');
-            if (data.success) {
-                fetchLeaveRequests();
-            } else {
-                alert(data.message || 'Failed to update leave status');
-            }
-        } catch (error) {
-            alert('Failed to update leave status');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handlePrint = () => {
-        const printContent = formRef.current;
-        const printWindow = window.open('', '_blank');
-        
-        printWindow.document.write(`
+    printWindow.document.write(`
             <!DOCTYPE html>
             <html>
             <head>
@@ -307,25 +375,35 @@ const LeaveManagement = () => {
                         <div class="field-row">
                             <label>Designation</label>
                             <span class="colon">:</span>
-                            <span class="field-value">${formData.designation}</span>
+                            <span class="field-value">${
+                              formData.designation
+                            }</span>
                         </div>
                         <div class="field-row">
                             <label>Period of Leave</label>
                             <span class="colon">:</span>
                             <span class="period-inputs">
-                                From <span class="date-value">${formData.startDate}</span>
-                                To <span class="date-value">${formData.endDate}</span>
+                                From <span class="date-value">${
+                                  formData.startDate
+                                }</span>
+                                To <span class="date-value">${
+                                  formData.endDate
+                                }</span>
                             </span>
                         </div>
                         <div class="field-row">
                             <label>Number of days</label>
                             <span class="colon">:</span>
-                            <span class="field-value">${formData.numberOfDays}</span>
+                            <span class="field-value">${
+                              formData.numberOfDays
+                            }</span>
                         </div>
                         <div class="field-row">
                             <label>Contact No.</label>
                             <span class="colon">:</span>
-                            <span class="field-value">${formData.contactNo}</span>
+                            <span class="field-value">${
+                              formData.contactNo
+                            }</span>
                         </div>
                         <div class="field-row">
                             <label>Reason</label>
@@ -335,11 +413,15 @@ const LeaveManagement = () => {
                         <div class="field-row">
                             <label>Person In-Charge in absence</label>
                             <span class="colon">:</span>
-                            <span class="field-value">${formData.personInCharge}</span>
+                            <span class="field-value">${
+                              formData.personInCharge
+                            }</span>
                         </div>
                     </div>
                     <div class="signature-row">
-                        <p><strong><u>Date of application:</u></strong> ${new Date().toLocaleDateString('en-IN')}</p>
+                        <p><strong><u>Date of application:</u></strong> ${new Date().toLocaleDateString(
+                          "en-IN"
+                        )}</p>
                         <p><strong><u>Signature of applicant</u></strong></p>
                     </div>
                     <div class="office-section">
@@ -384,235 +466,383 @@ const LeaveManagement = () => {
             </body>
             </html>
         `);
-        
-        printWindow.document.close();
-        
-        setTimeout(() => {
-            printWindow.print();
-        }, 500);
-    };
 
-    return (
-        <div className="leave-container">
-            <div className="leave-header no-print">
-                <h2>Leave Management</h2>
-                <p>Apply for leave or manage employee requests</p>
+    printWindow.document.close();
+
+    setTimeout(() => {
+      printWindow.print();
+    }, 500);
+  };
+
+  return (
+    <div className="leave-container">
+      <div className="leave-header no-print">
+        <h2>Leave Management</h2>
+        <p>Apply for leave or manage employee requests</p>
+      </div>
+
+      <div className="leave-tabs no-print">
+        <button
+          className={`tab-btn ${activeTab === "apply" ? "active" : ""}`}
+          onClick={() => setActiveTab("apply")}
+        >
+          <FileText size={18} />
+          Apply for Leave
+        </button>
+        <button
+          className={`tab-btn ${activeTab === "requests" ? "active" : ""}`}
+          onClick={() => setActiveTab("requests")}
+        >
+          <Clock size={18} />
+          Leave Requests
+          {requests.filter((r) => r.status === "pending").length > 0 && (
+            <span className="badge">
+              {requests.filter((r) => r.status === "pending").length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      <div className="leave-content">
+        {activeTab === "apply" ? (
+          <div className="apply-section">
+            <div className="document-page" ref={formRef} id="leave-form">
+              <div className="doc-letterhead">
+                <img
+                  src="/National_Institute_of_Technology,_Raipur_Logo.png"
+                  alt="NIT Raipur"
+                  className="logo-left"
+                />
+                <div className="letterhead-center">
+                  <p className="hindi-title">
+                    एन.आई.टी. रायपुर फाउंडेशन फॉर इनोवेशन एंड
+                  </p>
+                  <p className="hindi-title">ऑन्त्रप्रन्योरशिप</p>
+                  <p className="eng-title">
+                    NIT Raipur Foundation for Innovation & Entrepreneurship
+                  </p>
+                  <p className="subtitle">
+                    (A Technology Business Incubator & Not-for-profit Company
+                    governed by Section-8 of Companies Act 2013)
+                  </p>
+                  <p className="address">
+                    National Institute of Technology Raipur, G.E. Road, Raipur -
+                    492010, C.G.
+                  </p>
+                  <p className="contact">
+                    Website: www.nitrrfie.in Email: nitrrfie@nitrr.ac.in
+                  </p>
+                </div>
+                <img
+                  src="/logo-NITRRFIE.png"
+                  alt="NITRRFIE"
+                  className="logo-right"
+                />
+              </div>
+
+              <div className="doc-divider"></div>
+
+              <h2 className="form-title">Leave Application Form</h2>
+
+              <div className="doc-content">
+                <div className="to-section">
+                  <p>
+                    <strong>To,</strong>
+                  </p>
+                  <p>Faculty In charge</p>
+                  <p>NITRRFIE, Raipur (C.G.)</p>
+                </div>
+
+                <p className="subject">
+                  <strong>Subject: Regarding Leave.</strong>
+                </p>
+
+                <div className="form-fields">
+                  <div className="field-row">
+                    <label>Reporting to</label>
+                    <span className="colon">:</span>
+                    <select
+                      name="reportingToId"
+                      value={formData.reportingToId}
+                      onChange={handleReportingToChange}
+                      className="field-input"
+                    >
+                      <option value="">Select approver</option>
+                      {availableUsers.map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="field-row">
+                    <label>Name</label>
+                    <span className="colon">:</span>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      className="field-input"
+                    />
+                  </div>
+                  <div className="field-row">
+                    <label>Designation</label>
+                    <span className="colon">:</span>
+                    <input
+                      type="text"
+                      name="designation"
+                      value={formData.designation}
+                      onChange={handleInputChange}
+                      className="field-input"
+                    />
+                  </div>
+                  <div className="field-row">
+                    <label>Period of Leave</label>
+                    <span className="colon">:</span>
+                    <span className="period-inputs">
+                      From{" "}
+                      <input
+                        type="date"
+                        name="startDate"
+                        value={formData.startDate}
+                        onChange={handleInputChange}
+                        className="date-input"
+                      />
+                      To{" "}
+                      <input
+                        type="date"
+                        name="endDate"
+                        value={formData.endDate}
+                        onChange={handleInputChange}
+                        className="date-input"
+                      />
+                    </span>
+                  </div>
+                  <div className="field-row">
+                    <label>Number of days</label>
+                    <span className="colon">:</span>
+                    <input
+                      type="text"
+                      name="numberOfDays"
+                      value={formData.numberOfDays}
+                      onChange={handleInputChange}
+                      className="field-input"
+                    />
+                  </div>
+                  <div className="field-row">
+                    <label>Contact No.</label>
+                    <span className="colon">:</span>
+                    <input
+                      type="text"
+                      name="contactNo"
+                      value={formData.contactNo}
+                      onChange={handleInputChange}
+                      className="field-input"
+                    />
+                  </div>
+                  <div className="field-row">
+                    <label>Reason</label>
+                    <span className="colon">:</span>
+                    <input
+                      type="text"
+                      name="reason"
+                      value={formData.reason}
+                      onChange={handleInputChange}
+                      className="field-input"
+                    />
+                  </div>
+                  <div className="field-row">
+                    <label>Person In-Charge in absence</label>
+                    <span className="colon">:</span>
+                    <input
+                      type="text"
+                      name="personInCharge"
+                      value={formData.personInCharge}
+                      onChange={handleInputChange}
+                      className="field-input"
+                    />
+                  </div>
+                </div>
+
+                <div className="signature-row">
+                  <p>
+                    <strong>
+                      <u>Date of application:</u>
+                    </strong>
+                  </p>
+                  <p>
+                    <strong>
+                      <u>Signature of applicant</u>
+                    </strong>
+                  </p>
+                </div>
+
+                <div className="office-section">
+                  <p className="office-title">
+                    <u>
+                      <strong>For Office Use Only:</strong>
+                    </u>
+                  </p>
+                  <table className="office-table">
+                    <thead>
+                      <tr>
+                        <th>Nature of Leave</th>
+                        <th>
+                          No. of days leave
+                          <br />
+                          Already Availed
+                        </th>
+                        <th>
+                          Leave applied for
+                          <br />
+                          No. of Days
+                        </th>
+                        <th>Leave Balance</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>Casual Leave</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                      </tr>
+                      <tr>
+                        <td>On Duty Leave</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                      </tr>
+                      <tr>
+                        <td>Leave Without Pay</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <p className="recommendation">
+                    The approval of leave for
+                    ...............................day(s) is recommended.
+                  </p>
+                  <div className="approval-row">
+                    <p>
+                      <strong>Approved / Not Approved</strong>
+                    </p>
+                    <p>
+                      <strong>Faculty In-charge, NITRRFIE</strong>
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="leave-tabs no-print">
-                <button
-                    className={`tab-btn ${activeTab === 'apply' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('apply')}
-                >
-                    <FileText size={18} />
-                    Apply for Leave
-                </button>
-                <button
-                    className={`tab-btn ${activeTab === 'requests' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('requests')}
-                >
-                    <Clock size={18} />
-                    Leave Requests
-                    {requests.filter(r => r.status === 'pending').length > 0 && (
-                        <span className="badge">{requests.filter(r => r.status === 'pending').length}</span>
-                    )}
-                </button>
+            <div className="action-buttons no-print">
+              <button type="button" className="print-btn" onClick={handlePrint}>
+                <Printer size={18} />
+                Print / Save as PDF
+              </button>
+              <button
+                type="button"
+                className="submit-btn"
+                onClick={handleSubmit}
+              >
+                <Send size={18} />
+                Submit Application
+              </button>
             </div>
-
-            <div className="leave-content">
-                {activeTab === 'apply' ? (
-                    <div className="apply-section">
-                        <div className="document-page" ref={formRef} id="leave-form">
-                            <div className="doc-letterhead">
-                                <img src="/National_Institute_of_Technology,_Raipur_Logo.png" alt="NIT Raipur" className="logo-left" />
-                                <div className="letterhead-center">
-                                    <p className="hindi-title">एन.आई.टी. रायपुर फाउंडेशन फॉर इनोवेशन एंड</p>
-                                    <p className="hindi-title">ऑन्त्रप्रन्योरशिप</p>
-                                    <p className="eng-title">NIT Raipur Foundation for Innovation & Entrepreneurship</p>
-                                    <p className="subtitle">(A Technology Business Incubator & Not-for-profit Company governed by Section-8 of Companies Act 2013)</p>
-                                    <p className="address">National Institute of Technology Raipur, G.E. Road, Raipur - 492010, C.G.</p>
-                                    <p className="contact">Website: www.nitrrfie.in                    Email: nitrrfie@nitrr.ac.in</p>
-                                </div>
-                                <img src="/logo-NITRRFIE.png" alt="NITRRFIE" className="logo-right" />
-                            </div>
-
-                            <div className="doc-divider"></div>
-
-                            <h2 className="form-title">Leave Application Form</h2>
-
-                            <div className="doc-content">
-                                <div className="to-section">
-                                    <p><strong>To,</strong></p>
-                                    <p>Faculty In charge</p>
-                                    <p>NITRRFIE, Raipur (C.G.)</p>
-                                </div>
-
-                                <p className="subject"><strong>Subject: Regarding Leave.</strong></p>
-
-                                <div className="form-fields">
-                                    <div className="field-row">
-                                        <label>Name</label>
-                                        <span className="colon">:</span>
-                                        <input type="text" name="name" value={formData.name} onChange={handleInputChange} className="field-input" />
-                                    </div>
-                                    <div className="field-row">
-                                        <label>Designation</label>
-                                        <span className="colon">:</span>
-                                        <input type="text" name="designation" value={formData.designation} onChange={handleInputChange} className="field-input" />
-                                    </div>
-                                    <div className="field-row">
-                                        <label>Period of Leave</label>
-                                        <span className="colon">:</span>
-                                        <span className="period-inputs">
-                                            From <input type="date" name="startDate" value={formData.startDate} onChange={handleInputChange} className="date-input" />
-                                            To <input type="date" name="endDate" value={formData.endDate} onChange={handleInputChange} className="date-input" />
-                                        </span>
-                                    </div>
-                                    <div className="field-row">
-                                        <label>Number of days</label>
-                                        <span className="colon">:</span>
-                                        <input type="text" name="numberOfDays" value={formData.numberOfDays} onChange={handleInputChange} className="field-input" />
-                                    </div>
-                                    <div className="field-row">
-                                        <label>Contact No.</label>
-                                        <span className="colon">:</span>
-                                        <input type="text" name="contactNo" value={formData.contactNo} onChange={handleInputChange} className="field-input" />
-                                    </div>
-                                    <div className="field-row">
-                                        <label>Reason</label>
-                                        <span className="colon">:</span>
-                                        <input type="text" name="reason" value={formData.reason} onChange={handleInputChange} className="field-input" />
-                                    </div>
-                                    <div className="field-row">
-                                        <label>Person In-Charge in absence</label>
-                                        <span className="colon">:</span>
-                                        <input type="text" name="personInCharge" value={formData.personInCharge} onChange={handleInputChange} className="field-input" />
-                                    </div>
-                                </div>
-
-                                <div className="signature-row">
-                                    <p><strong><u>Date of application:</u></strong></p>
-                                    <p><strong><u>Signature of applicant</u></strong></p>
-                                </div>
-
-                                <div className="office-section">
-                                    <p className="office-title"><u><strong>For Office Use Only:</strong></u></p>
-                                    <table className="office-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Nature of Leave</th>
-                                                <th>No. of days leave<br/>Already Availed</th>
-                                                <th>Leave applied for<br/>No. of Days</th>
-                                                <th>Leave Balance</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>Casual Leave</td>
-                                                <td></td>
-                                                <td></td>
-                                                <td></td>
-                                            </tr>
-                                            <tr>
-                                                <td>On Duty Leave</td>
-                                                <td></td>
-                                                <td></td>
-                                                <td></td>
-                                            </tr>
-                                            <tr>
-                                                <td>Leave Without Pay</td>
-                                                <td></td>
-                                                <td></td>
-                                                <td></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-
-                                    <p className="recommendation">The approval of leave for ...............................day(s) is recommended.</p>
-                                    <div className="approval-row">
-                                        <p><strong>Approved / Not Approved</strong></p>
-                                        <p><strong>Faculty In-charge, NITRRFIE</strong></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="action-buttons no-print">
-                            <button type="button" className="print-btn" onClick={handlePrint}>
-                                <Printer size={18} />
-                                Print / Save as PDF
-                            </button>
-                            <button type="button" className="submit-btn" onClick={handleSubmit}>
-                                <Send size={18} />
-                                Submit Application
-                            </button>
-                        </div>
+          </div>
+        ) : (
+          <div className="requests-section">
+            {requests.length === 0 ? (
+              <div className="no-requests">No leave requests found</div>
+            ) : (
+              requests.map((req) => (
+                <div key={req._id} className={`request-card ${req.status}`}>
+                  <div className="req-header">
+                    <div className="user-info">
+                      <div className="avatar">
+                        <User size={20} />
+                      </div>
+                      <div>
+                        <h4>
+                          {req.user?.profile?.firstName
+                            ? `${req.user.profile.firstName} ${
+                                req.user.profile.lastName || ""
+                              }`
+                            : req.user?.username || "Unknown"}
+                        </h4>
+                        <span className="desg">
+                          {req.user?.employment?.designation || "Employee"}
+                        </span>
+                      </div>
                     </div>
-                ) : (
-                    <div className="requests-section">
-                        {requests.length === 0 ? (
-                            <div className="no-requests">No leave requests found</div>
-                        ) : requests.map(req => (
-                            <div key={req._id} className={`request-card ${req.status}`}>
-                                <div className="req-header">
-                                    <div className="user-info">
-                                        <div className="avatar">
-                                            <User size={20} />
-                                        </div>
-                                        <div>
-                                            <h4>{req.user?.profile?.firstName ? `${req.user.profile.firstName} ${req.user.profile.lastName || ''}` : req.user?.username || 'Unknown'}</h4>
-                                            <span className="desg">{req.user?.employment?.designation || 'Employee'}</span>
-                                        </div>
-                                    </div>
-                                    <div className={`status-badge ${req.status}`}>
-                                        {req.status.charAt(0).toUpperCase() + req.status.slice(1)}
-                                    </div>
-                                </div>
-
-                                <div className="req-details">
-                                    <div className="detail">
-                                        <span className="lbl">Leave Type:</span>
-                                        <span className="val">{req.leaveType}</span>
-                                    </div>
-                                    <div className="detail">
-                                        <span className="lbl">Period:</span>
-                                        <span className="val"><Calendar size={14} /> {new Date(req.startDate).toLocaleDateString()} to {new Date(req.endDate).toLocaleDateString()}</span>
-                                    </div>
-                                    <div className="detail">
-                                        <span className="lbl">Days:</span>
-                                        <span className="val">{req.numberOfDays}</span>
-                                    </div>
-                                    <div className="detail">
-                                        <span className="lbl">Contact:</span>
-                                        <span className="val">{req.contactNo}</span>
-                                    </div>
-                                    <div className="detail full">
-                                        <span className="lbl">Reason:</span>
-                                        <span className="val">{req.reason}</span>
-                                    </div>
-                                    <div className="detail">
-                                        <span className="lbl">In-Charge:</span>
-                                        <span className="val"><UserCheck size={14} /> {req.personInCharge}</span>
-                                    </div>
-                                </div>
-
-                                {req.status === 'pending' && (
-                                    <div className="req-actions">
-                                        <button className="reject-btn" onClick={() => handleStatusChange(req._id, 'rejected')} disabled={loading}>
-                                            <X size={18} /> Reject
-                                        </button>
-                                        <button className="approve-btn" onClick={() => handleStatusChange(req._id, 'approved')} disabled={loading}>
-                                            <Check size={18} /> Approve
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        ))}
+                    <div className={`status-badge ${req.status}`}>
+                      {req.status.charAt(0).toUpperCase() + req.status.slice(1)}
                     </div>
-                )}
-            </div>
-        </div>
-    );
+                  </div>
+
+                  <div className="req-details">
+                    <div className="detail">
+                      <span className="lbl">Leave Type:</span>
+                      <span className="val">{req.leaveType}</span>
+                    </div>
+                    <div className="detail">
+                      <span className="lbl">Period:</span>
+                      <span className="val">
+                        <Calendar size={14} />{" "}
+                        {new Date(req.startDate).toLocaleDateString()} to{" "}
+                        {new Date(req.endDate).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="detail">
+                      <span className="lbl">Days:</span>
+                      <span className="val">{req.numberOfDays}</span>
+                    </div>
+                    <div className="detail">
+                      <span className="lbl">Contact:</span>
+                      <span className="val">{req.contactNo}</span>
+                    </div>
+                    <div className="detail full">
+                      <span className="lbl">Reason:</span>
+                      <span className="val">{req.reason}</span>
+                    </div>
+                    <div className="detail">
+                      <span className="lbl">In-Charge:</span>
+                      <span className="val">
+                        <UserCheck size={14} /> {req.personInCharge}
+                      </span>
+                    </div>
+                  </div>
+
+                  {req.status === "pending" && (
+                    <div className="req-actions">
+                      <button
+                        className="reject-btn"
+                        onClick={() => handleStatusChange(req._id, "rejected")}
+                        disabled={loading}
+                      >
+                        <X size={18} /> Reject
+                      </button>
+                      <button
+                        className="approve-btn"
+                        onClick={() => handleStatusChange(req._id, "approved")}
+                        disabled={loading}
+                      >
+                        <Check size={18} /> Approve
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default LeaveManagement;
