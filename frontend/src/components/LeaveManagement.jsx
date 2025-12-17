@@ -22,6 +22,12 @@ const LeaveManagement = () => {
   const [requests, setRequests] = useState([]);
   const [availableUsers, setAvailableUsers] = useState([]);
 
+  const leaveTypeOptions = [
+    "Casual Leave",
+    "On Duty Leave",
+    "Leave Without Pay",
+  ];
+
   const [formData, setFormData] = useState({
     name: user?.profile?.firstName
       ? `${user.profile.firstName} ${user.profile.lastName || ""}`
@@ -176,296 +182,312 @@ const LeaveManagement = () => {
     const printWindow = window.open("", "_blank");
 
     printWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Leave Application - NITRRFIE</title>
-                <style>
-                    * {
-                        margin: 0;
-                        padding: 0;
-                        box-sizing: border-box;
-                    }
-                    body {
-                        font-family: 'Times New Roman', Times, serif;
-                        font-size: 14px;
-                        line-height: 1.5;
-                        color: #000;
-                        background: #fff;
-                        padding: 40px 50px;
-                    }
-                    .doc-letterhead {
-                        display: flex;
-                        align-items: flex-start;
-                        justify-content: space-between;
-                        margin-bottom: 10px;
-                    }
-                    .logo-left, .logo-right {
-                        width: 65px;
-                        height: 65px;
-                        object-fit: contain;
-                    }
-                    .letterhead-center {
-                        flex: 1;
-                        text-align: center;
-                        padding: 0 15px;
-                    }
-                    .hindi-title {
-                        font-size: 13px;
-                        font-weight: bold;
-                        margin: 0;
-                        line-height: 1.3;
-                    }
-                    .eng-title {
-                        font-size: 14px;
-                        font-weight: bold;
-                        text-decoration: underline;
-                        margin: 4px 0;
-                    }
-                    .subtitle {
-                        font-size: 9px;
-                        font-style: italic;
-                        margin: 2px 0;
-                    }
-                    .address {
-                        font-size: 11px;
-                        margin: 2px 0;
-                    }
-                    .contact {
-                        font-size: 10px;
-                        margin: 2px 0;
-                        white-space: pre;
-                    }
-                    .doc-divider {
-                        border-top: 1px solid #000;
-                        margin: 10px 0 15px 0;
-                    }
-                    .form-title {
-                        text-align: center;
-                        font-size: 14px;
-                        font-weight: bold;
-                        text-decoration: underline;
-                        margin: 0 0 20px 0;
-                    }
-                    .doc-content {
-                        margin-top: 15px;
-                    }
-                    .to-section {
-                        margin-bottom: 15px;
-                    }
-                    .to-section p {
-                        margin: 0;
-                        line-height: 1.4;
-                    }
-                    .subject {
-                        margin: 0 0 20px 0;
-                    }
-                    .form-fields {
-                        margin-bottom: 25px;
-                    }
-                    .field-row {
-                        display: flex;
-                        align-items: baseline;
-                        margin-bottom: 12px;
-                    }
-                    .field-row label {
-                        min-width: 180px;
-                        font-weight: normal;
-                    }
-                    .colon {
-                        margin-right: 10px;
-                    }
-                    .field-value {
-                        flex: 1;
-                        border-bottom: 1px dotted #000;
-                        padding: 2px 5px;
-                        min-height: 20px;
-                    }
-                    .period-inputs {
-                        flex: 1;
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-                    }
-                    .date-value {
-                        border-bottom: 1px dotted #000;
-                        padding: 2px 5px;
-                        min-width: 100px;
-                    }
-                    .signature-row {
-                        display: flex;
-                        justify-content: space-between;
-                        margin: 30px 0;
-                    }
-                    .signature-row p {
-                        margin: 0;
-                    }
-                    .office-section {
-                        margin-top: 30px;
-                    }
-                    .office-title {
-                        margin: 0 0 10px 0;
-                    }
-                    .office-table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        margin-bottom: 15px;
-                    }
-                    .office-table th, .office-table td {
-                        border: 1px solid #000;
-                        padding: 8px;
-                        text-align: center;
-                        font-size: 12px;
-                    }
-                    .office-table th {
-                        font-weight: bold;
-                    }
-                    .office-table td {
-                        height: 30px;
-                    }
-                    .office-table td:first-child {
-                        text-align: left;
-                    }
-                    .recommendation {
-                        margin: 15px 0 10px 0;
-                    }
-                    .approval-row {
-                        display: flex;
-                        justify-content: space-between;
-                        margin-top: 10px;
-                    }
-                    .approval-row p {
-                        margin: 0;
-                    }
-                    @media print {
-                        body {
-                            padding: 20px 30px;
-                        }
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="doc-letterhead">
-                    <img src="/National_Institute_of_Technology,_Raipur_Logo.png" alt="NIT Raipur" class="logo-left" />
-                    <div class="letterhead-center">
-                        <p class="hindi-title">एन.आई.टी. रायपुर फाउंडेशन फॉर इनोवेशन एंड</p>
-                        <p class="hindi-title">ऑन्त्रप्रन्योरशिप</p>
-                        <p class="eng-title">NIT Raipur Foundation for Innovation & Entrepreneurship</p>
-                        <p class="subtitle">(A Technology Business Incubator & Not-for-profit Company governed by Section-8 of Companies Act 2013)</p>
-                        <p class="address">National Institute of Technology Raipur, G.E. Road, Raipur - 492010, C.G.</p>
-                        <p class="contact">Website: www.nitrrfie.in                    Email: nitrrfie@nitrr.ac.in</p>
-                    </div>
-                    <img src="/logo-NITRRFIE.png" alt="NITRRFIE" class="logo-right" />
-                </div>
-                <div class="doc-divider"></div>
-                <h2 class="form-title">Leave Application Form</h2>
-                <div class="doc-content">
-                    <div class="to-section">
-                        <p><strong>To,</strong></p>
-                        <p>Faculty In charge</p>
-                        <p>NITRRFIE, Raipur (C.G.)</p>
-                    </div>
-                    <p class="subject"><strong>Subject: Regarding Leave.</strong></p>
-                    <div class="form-fields">
-                        <div class="field-row">
-                            <label>Name</label>
-                            <span class="colon">:</span>
-                            <span class="field-value">${formData.name}</span>
-                        </div>
-                        <div class="field-row">
-                            <label>Designation</label>
-                            <span class="colon">:</span>
-                            <span class="field-value">${
-                              formData.designation
-                            }</span>
-                        </div>
-                        <div class="field-row">
-                            <label>Period of Leave</label>
-                            <span class="colon">:</span>
-                            <span class="period-inputs">
-                                From <span class="date-value">${
-                                  formData.startDate
-                                }</span>
-                                To <span class="date-value">${
-                                  formData.endDate
-                                }</span>
-                            </span>
-                        </div>
-                        <div class="field-row">
-                            <label>Number of days</label>
-                            <span class="colon">:</span>
-                            <span class="field-value">${
-                              formData.numberOfDays
-                            }</span>
-                        </div>
-                        <div class="field-row">
-                            <label>Contact No.</label>
-                            <span class="colon">:</span>
-                            <span class="field-value">${
-                              formData.contactNo
-                            }</span>
-                        </div>
-                        <div class="field-row">
-                            <label>Reason</label>
-                            <span class="colon">:</span>
-                            <span class="field-value">${formData.reason}</span>
-                        </div>
-                        <div class="field-row">
-                            <label>Person In-Charge in absence</label>
-                            <span class="colon">:</span>
-                            <span class="field-value">${
-                              formData.personInCharge
-                            }</span>
-                        </div>
-                    </div>
-                    <div class="signature-row">
-                        <p><strong><u>Date of application:</u></strong> ${new Date().toLocaleDateString(
-                          "en-IN"
-                        )}</p>
-                        <p><strong><u>Signature of applicant</u></strong></p>
-                    </div>
-                    <div class="office-section">
-                        <p class="office-title"><u><strong>For Office Use Only:</strong></u></p>
-                        <table class="office-table">
-                            <thead>
-                                <tr>
-                                    <th>Nature of Leave</th>
-                                    <th>No. of days leave<br/>Already Availed</th>
-                                    <th>Leave applied for<br/>No. of Days</th>
-                                    <th>Leave Balance</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Casual Leave</td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                                <tr>
-                                    <td>On Duty Leave</td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                                <tr>
-                                    <td>Leave Without Pay</td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <p class="recommendation">The approval of leave for ...............................day(s) is recommended.</p>
-                        <div class="approval-row">
-                            <p><strong>Approved / Not Approved</strong></p>
-                            <p><strong>Faculty In-charge, NITRRFIE</strong></p>
-                        </div>
-                    </div>
-                </div>
-            </body>
-            </html>
-        `);
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Leave Application - NITRRFIE</title>
+        <style>
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #000;
+            background: #fff;
+            padding: 40px 50px;
+          }
+          .doc-letterhead {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 10px;
+          }
+          .logo-left, .logo-right {
+            width: 65px;
+            height: 65px;
+            object-fit: contain;
+          }
+          .letterhead-center {
+            flex: 1;
+            text-align: center;
+            padding: 0 15px;
+          }
+          .hindi-title {
+            font-size: 13px;
+            font-weight: bold;
+            margin: 0;
+            line-height: 1.3;
+          }
+          .eng-title {
+            font-size: 14px;
+            font-weight: bold;
+            text-decoration: underline;
+            margin: 4px 0;
+          }
+          .subtitle {
+            font-size: 9px;
+            font-style: italic;
+            margin: 2px 0;
+          }
+          .address {
+            font-size: 11px;
+            margin: 2px 0;
+          }
+          .contact {
+            font-size: 10px;
+            margin: 2px 0;
+            white-space: pre;
+          }
+          .doc-divider {
+            border-top: 1px solid #000;
+            margin: 10px 0 15px 0;
+          }
+          .form-title {
+            text-align: center;
+            font-size: 14px;
+            font-weight: bold;
+            text-decoration: underline;
+            margin: 0 0 20px 0;
+          }
+          .doc-content {
+            margin-top: 15px;
+          }
+          .to-section {
+            margin-bottom: 15px;
+          }
+          .to-section p {
+            margin: 0;
+            line-height: 1.4;
+          }
+          .subject {
+            margin: 0 0 20px 0;
+          }
+          .form-fields {
+            margin-bottom: 25px;
+          }
+          .field-row {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 12px;
+          }
+          .field-row label {
+            min-width: 180px;
+            font-weight: normal;
+          }
+          .colon {
+            margin-right: 10px;
+          }
+          .field-value {
+            flex: 1;
+            border-bottom: 1px dotted #000;
+            padding: 2px 5px;
+            min-height: 20px;
+          }
+          .period-inputs {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          }
+          .date-value {
+            border-bottom: 1px dotted #000;
+            padding: 2px 5px;
+            min-width: 100px;
+          }
+          .signature-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 30px 0;
+          }
+          .signature-row p {
+            margin: 0;
+          }
+          .office-section {
+            margin-top: 30px;
+          }
+          .office-title {
+            margin: 0 0 10px 0;
+          }
+          .office-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+          }
+          .office-table th, .office-table td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: center;
+            font-size: 12px;
+          }
+          .office-table th {
+            font-weight: bold;
+          }
+          .office-table td {
+            height: 30px;
+          }
+          .office-table td:first-child {
+            text-align: left;
+          }
+          .recommendation {
+            margin: 15px 0 10px 0;
+          }
+          .approval-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+          }
+          .approval-row p {
+            margin: 0;
+          }
+          @media print {
+            body {
+              padding: 20px 30px;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="doc-letterhead">
+          <img src="/National_Institute_of_Technology,_Raipur_Logo.png" alt="NIT Raipur" class="logo-left" />
+          <div class="letterhead-center">
+            <p class="hindi-title">एन.आई.टी. रायपुर फाउंडेशन फॉर इनोवेशन एंड</p>
+            <p class="hindi-title">ऑन्त्रप्रन्योरशिप</p>
+            <p class="eng-title">NIT Raipur Foundation for Innovation & Entrepreneurship</p>
+            <p class="subtitle">(A Technology Business Incubator & Not-for-profit Company governed by Section-8 of Companies Act 2013)</p>
+            <p class="address">National Institute of Technology Raipur, G.E. Road, Raipur - 492010, C.G.</p>
+            <p class="contact">Website: www.nitrrfie.in                    Email: nitrrfie@nitrr.ac.in</p>
+          </div>
+          <img src="/logo-NITRRFIE.png" alt="NITRRFIE" class="logo-right" />
+        </div>
+        <div class="doc-divider"></div>
+        <h2 class="form-title">Leave Application Form</h2>
+        <div class="doc-content">
+          <div class="to-section">
+            <p><strong>To,</strong></p>
+            <p>Faculty In charge</p>
+            <p>NITRRFIE, Raipur (C.G.)</p>
+          </div>
+          <p class="subject"><strong>Subject: Regarding Leave.</strong></p>
+          <div class="form-fields">
+
+            <!-- ADD THIS: Reporting to -->
+            <div class="field-row">
+              <label>Reporting to</label>
+              <span class="colon">:</span>
+              <span class="field-value">${formData.reportingToName || ""}</span>
+            </div>
+
+            <div class="field-row">
+              <label>Name</label>
+              <span class="colon">:</span>
+              <span class="field-value">${formData.name}</span>
+            </div>
+            <div class="field-row">
+              <label>Designation</label>
+              <span class="colon">:</span>
+              <span class="field-value">${formData.designation}</span>
+            </div>
+
+            <!-- ADD THIS: Nature of Leave -->
+            <div class="field-row">
+              <label>Nature of Leave</label>
+              <span class="colon">:</span>
+              <span class="field-value">${formData.leaveType || ""}</span>
+            </div>
+
+            <div class="field-row">
+              <label>Period of Leave</label>
+              <span class="colon">:</span>
+              <span class="period-inputs">
+                From <span class="date-value">${formData.startDate}</span>
+                To <span class="date-value">${formData.endDate}</span>
+              </span>
+            </div>
+            <div class="field-row">
+              <label>Number of days</label>
+              <span class="colon">:</span>
+              <span class="field-value">${formData.numberOfDays}</span>
+            </div>
+            <div class="field-row">
+              <label>Contact No.</label>
+              <span class="colon">:</span>
+              <span class="field-value">${formData.contactNo}</span>
+            </div>
+            <div class="field-row">
+              <label>Reason</label>
+              <span class="colon">:</span>
+              <span class="field-value">${formData.reason}</span>
+            </div>
+            <div class="field-row">
+              <label>Person In-Charge in absence</label>
+              <span class="colon">:</span>
+              <span class="field-value">${formData.personInCharge}</span>
+            </div>
+          </div>
+          <div class="signature-row">
+            <p><strong><u>Date of application:</u></strong> ${new Date().toLocaleDateString(
+              "en-IN"
+            )}</p>
+            <p><strong><u>Signature of applicant</u></strong></p>
+          </div>
+          <div class="office-section">
+            <p class="office-title"><u><strong>For Office Use Only:</strong></u></p>
+            <table class="office-table">
+              <thead>
+                <tr>
+                  <th>Nature of Leave</th>
+                  <th>No. of days leave<br/>Already Availed</th>
+                  <th>Leave applied for<br/>No. of Days</th>
+                  <th>Leave Balance</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Casual Leave</td>
+                  <td></td>
+                  <td>${
+                    formData.leaveType === "Casual Leave"
+                      ? formData.numberOfDays
+                      : ""
+                  }</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>On Duty Leave</td>
+                  <td></td>
+                  <td>${
+                    formData.leaveType === "On Duty Leave"
+                      ? formData.numberOfDays
+                      : ""
+                  }</td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td>Leave Without Pay</td>
+                  <td></td>
+                  <td>${
+                    formData.leaveType === "Leave Without Pay"
+                      ? formData.numberOfDays
+                      : ""
+                  }</td>
+                  <td></td>
+                </tr>
+              </tbody>
+            </table>
+            <p class="recommendation">The approval of leave for ...............................day(s) is recommended.</p>
+            <div class="approval-row">
+              <p><strong>Approved / Not Approved</strong></p>
+              <p><strong>Faculty In-charge, NITRRFIE</strong></p>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `);
 
     printWindow.document.close();
 
@@ -473,6 +495,34 @@ const LeaveManagement = () => {
       printWindow.print();
     }, 500);
   };
+
+  const parseLocalDate = (yyyyMmDd) => {
+    if (!yyyyMmDd) return null;
+    const [y, m, d] = yyyyMmDd.split("-").map(Number);
+    // Local midnight avoids timezone shifting issues
+    return new Date(y, m - 1, d, 0, 0, 0, 0);
+  };
+
+  const getInclusiveDayCount = (start, end) => {
+    const s = parseLocalDate(start);
+    const e = parseLocalDate(end);
+    if (!s || !e) return "";
+    if (e < s) return "";
+    const MS_PER_DAY = 24 * 60 * 60 * 1000;
+    const diffDays = Math.round((e - s) / MS_PER_DAY) + 1; // inclusive
+    return String(diffDays);
+  };
+
+  // Auto-update numberOfDays when dates change
+  useEffect(() => {
+    const computed = getInclusiveDayCount(formData.startDate, formData.endDate);
+
+    setFormData((prev) => {
+      // avoid unnecessary state updates / rerenders
+      if (prev.numberOfDays === computed) return prev;
+      return { ...prev, numberOfDays: computed };
+    });
+  }, [formData.startDate, formData.endDate]);
 
   return (
     <div className="leave-container">
@@ -584,6 +634,7 @@ const LeaveManagement = () => {
                       value={formData.name}
                       onChange={handleInputChange}
                       className="field-input"
+                      readOnly
                     />
                   </div>
                   <div className="field-row">
@@ -595,7 +646,24 @@ const LeaveManagement = () => {
                       value={formData.designation}
                       onChange={handleInputChange}
                       className="field-input"
+                      readOnly
                     />
+                  </div>
+                  <div className="field-row">
+                    <label>Nature of Leave</label>
+                    <span className="colon">:</span>
+                    <select
+                      name="leaveType"
+                      value={formData.leaveType}
+                      onChange={handleInputChange}
+                      className="field-input"
+                    >
+                      {leaveTypeOptions.map((opt) => (
+                        <option key={opt} value={opt}>
+                          {opt}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="field-row">
                     <label>Period of Leave</label>
@@ -628,6 +696,7 @@ const LeaveManagement = () => {
                       value={formData.numberOfDays}
                       onChange={handleInputChange}
                       className="field-input"
+                      readOnly
                     />
                   </div>
                   <div className="field-row">
@@ -639,6 +708,7 @@ const LeaveManagement = () => {
                       value={formData.contactNo}
                       onChange={handleInputChange}
                       className="field-input"
+                      readOnly
                     />
                   </div>
                   <div className="field-row">
@@ -655,13 +725,19 @@ const LeaveManagement = () => {
                   <div className="field-row">
                     <label>Person In-Charge in absence</label>
                     <span className="colon">:</span>
-                    <input
-                      type="text"
+                    <select
                       name="personInCharge"
                       value={formData.personInCharge}
                       onChange={handleInputChange}
                       className="field-input"
-                    />
+                    >
+                      <option value="">Select person in-charge</option>
+                      {availableUsers.map((u) => (
+                        <option key={u.id} value={u.name}>
+                          {u.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
@@ -705,19 +781,31 @@ const LeaveManagement = () => {
                       <tr>
                         <td>Casual Leave</td>
                         <td></td>
-                        <td></td>
+                        <td>
+                          {formData.leaveType === "Casual Leave"
+                            ? formData.numberOfDays
+                            : ""}
+                        </td>
                         <td></td>
                       </tr>
                       <tr>
                         <td>On Duty Leave</td>
                         <td></td>
-                        <td></td>
+                        <td>
+                          {formData.leaveType === "On Duty Leave"
+                            ? formData.numberOfDays
+                            : ""}
+                        </td>
                         <td></td>
                       </tr>
                       <tr>
                         <td>Leave Without Pay</td>
                         <td></td>
-                        <td></td>
+                        <td>
+                          {formData.leaveType === "Leave Without Pay"
+                            ? formData.numberOfDays
+                            : ""}
+                        </td>
                         <td></td>
                       </tr>
                     </tbody>
