@@ -19,8 +19,20 @@ const LeaveManagement = () => {
   const [activeTab, setActiveTab] = useState("apply");
   const formRef = useRef(null);
   const [loading, setLoading] = useState(false);
-  const [requests, setRequests] = useState([]);
+  const [myLeaves, setMyLeaves] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState([]);
+  const [leaveBalance, setLeaveBalance] = useState(
+    user?.leaveBalance || {
+      casualLeave: 0,
+    }
+  );
   const [availableUsers, setAvailableUsers] = useState([]);
+
+  const leaveTypeToKey = {
+    "Casual Leave": "casualLeave",
+    "On Duty Leave": "onDutyLeave",
+    "Leave Without Pay": "leaveWithoutPay",
+  };
 
   const leaveTypeOptions = [
     "Casual Leave",
@@ -45,7 +57,11 @@ const LeaveManagement = () => {
   });
 
   useEffect(() => {
-    fetchLeaveRequests();
+    if (activeTab === "requests") {
+      fetchPendingRequests();
+    } else {
+      fetchMyLeaves();
+    }
   }, [activeTab]);
 
   useEffect(() => {
@@ -74,18 +90,52 @@ const LeaveManagement = () => {
     }
   };
 
-  const fetchLeaveRequests = async () => {
+  const fetchMyLeaves = async () => {
     try {
-      const data =
-        activeTab === "requests"
-          ? await leaveAPI.getPending()
-          : await leaveAPI.getMy();
+      const data = await leaveAPI.getMy();
       if (data.success) {
-        setRequests(data.leaves || []);
+        setMyLeaves(data.leaves || []);
+        if (data.leaveBalance) setLeaveBalance(data.leaveBalance);
       }
     } catch (error) {
       console.error("Failed to fetch leaves:", error);
     }
+  };
+
+  const fetchPendingRequests = async () => {
+    try {
+      const data = await leaveAPI.getPending();
+      if (data.success) {
+        setPendingRequests(data.leaves || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch pending leaves:", error);
+    }
+  };
+
+  const approvedAvailed = (() => {
+    const totals = { casualLeave: 0, onDutyLeave: 0, leaveWithoutPay: 0 };
+    for (const leave of myLeaves || []) {
+      if (leave?.status !== "approved") continue;
+      const key = leaveTypeToKey[leave.leaveType];
+      if (!key) continue;
+      totals[key] += Number(leave.numberOfDays || 0);
+    }
+    return totals;
+  })();
+
+  // Leave policy:
+  // - Casual Leave has a limited entitlement (leaveBalance.casualLeave)
+  // - On Duty Leave and Leave Without Pay are unlimited
+  const casualEntitlement = Number(leaveBalance?.casualLeave ?? 0);
+  const casualRemaining = Math.max(
+    casualEntitlement - Number(approvedAvailed.casualLeave || 0),
+    0
+  );
+  const leaveBalanceDisplay = {
+    casualLeave: casualRemaining,
+    onDutyLeave: "N/A",
+    leaveWithoutPay: "N/A",
   };
 
   const handleInputChange = (e) => {
@@ -147,7 +197,7 @@ const LeaveManagement = () => {
           reportingToName: "",
           personInCharge: "",
         });
-        fetchLeaveRequests();
+        fetchMyLeaves();
       } else {
         alert(data.message || "Failed to submit leave application");
       }
@@ -166,7 +216,7 @@ const LeaveManagement = () => {
           ? await leaveAPI.approve(id, "Approved")
           : await leaveAPI.reject(id, "Rejected");
       if (data.success) {
-        fetchLeaveRequests();
+        fetchPendingRequests();
       } else {
         alert(data.message || "Failed to update leave status");
       }
@@ -448,33 +498,33 @@ const LeaveManagement = () => {
               <tbody>
                 <tr>
                   <td>Casual Leave</td>
-                  <td></td>
+                  <td>${approvedAvailed.casualLeave || 0}</td>
                   <td>${
                     formData.leaveType === "Casual Leave"
                       ? formData.numberOfDays
                       : ""
                   }</td>
-                  <td></td>
+                  <td>${leaveBalanceDisplay.casualLeave}</td>
                 </tr>
                 <tr>
                   <td>On Duty Leave</td>
-                  <td></td>
+                  <td>${approvedAvailed.onDutyLeave || 0}</td>
                   <td>${
                     formData.leaveType === "On Duty Leave"
                       ? formData.numberOfDays
                       : ""
                   }</td>
-                  <td></td>
+                  <td>${leaveBalanceDisplay.onDutyLeave}</td>
                 </tr>
                 <tr>
                   <td>Leave Without Pay</td>
-                  <td></td>
+                  <td>${approvedAvailed.leaveWithoutPay || 0}</td>
                   <td>${
                     formData.leaveType === "Leave Without Pay"
                       ? formData.numberOfDays
                       : ""
                   }</td>
-                  <td></td>
+                  <td>${leaveBalanceDisplay.leaveWithoutPay}</td>
                 </tr>
               </tbody>
             </table>
@@ -545,9 +595,9 @@ const LeaveManagement = () => {
         >
           <Clock size={18} />
           Leave Requests
-          {requests.filter((r) => r.status === "pending").length > 0 && (
+          {pendingRequests.filter((r) => r.status === "pending").length > 0 && (
             <span className="badge">
-              {requests.filter((r) => r.status === "pending").length}
+              {pendingRequests.filter((r) => r.status === "pending").length}
             </span>
           )}
         </button>
@@ -780,33 +830,33 @@ const LeaveManagement = () => {
                     <tbody>
                       <tr>
                         <td>Casual Leave</td>
-                        <td></td>
+                        <td>{approvedAvailed.casualLeave || 0}</td>
                         <td>
                           {formData.leaveType === "Casual Leave"
                             ? formData.numberOfDays
                             : ""}
                         </td>
-                        <td></td>
+                        <td>{leaveBalanceDisplay.casualLeave}</td>
                       </tr>
                       <tr>
                         <td>On Duty Leave</td>
-                        <td></td>
+                        <td>{approvedAvailed.onDutyLeave || 0}</td>
                         <td>
                           {formData.leaveType === "On Duty Leave"
                             ? formData.numberOfDays
                             : ""}
                         </td>
-                        <td></td>
+                        <td>{leaveBalanceDisplay.onDutyLeave}</td>
                       </tr>
                       <tr>
                         <td>Leave Without Pay</td>
-                        <td></td>
+                        <td>{approvedAvailed.leaveWithoutPay || 0}</td>
                         <td>
                           {formData.leaveType === "Leave Without Pay"
                             ? formData.numberOfDays
                             : ""}
                         </td>
-                        <td></td>
+                        <td>{leaveBalanceDisplay.leaveWithoutPay}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -844,10 +894,10 @@ const LeaveManagement = () => {
           </div>
         ) : (
           <div className="requests-section">
-            {requests.length === 0 ? (
+            {pendingRequests.length === 0 ? (
               <div className="no-requests">No leave requests found</div>
             ) : (
-              requests.map((req) => (
+              pendingRequests.map((req) => (
                 <div key={req._id} className={`request-card ${req.status}`}>
                   <div className="req-header">
                     <div className="user-info">

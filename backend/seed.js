@@ -70,7 +70,7 @@ const seedUsers = async () => {
                 },
                 leaveBalance: {
                     casualLeave: 12,
-                    onDutyLeave: 15,
+                    onDutyLeave: 0,
                     leaveWithoutPay: 0
                 },
                 isActive: true
@@ -127,8 +127,8 @@ const seedUsers = async () => {
                     ifscCode: 'SBIN0009154'
                 },
                 leaveBalance: {
-                    casualLeave: 12,
-                    onDutyLeave: 15,
+                    casualLeave: 8,
+                    onDutyLeave: 0,
                     leaveWithoutPay: 0
                 },
                 isActive: true
@@ -186,8 +186,8 @@ const seedUsers = async () => {
                     ifscCode: 'SBIN0005194'
                 },
                 leaveBalance: {
-                    casualLeave: 12,
-                    onDutyLeave: 15,
+                    casualLeave: 8,
+                    onDutyLeave: 0,
                     leaveWithoutPay: 0
                 },
                 isActive: true
@@ -272,6 +272,11 @@ const seedUsers = async () => {
                     accountNumber: '39634349811',
                     ifscCode: 'SBIN0001470'
                 },
+                leaveBalance: {
+                    casualLeave: 8,
+                    onDutyLeave: 0,
+                    leaveWithoutPay: 0
+                },
                 isActive: true
             },
             { upsert: true, new: true }
@@ -308,6 +313,11 @@ const seedUsers = async () => {
                     branch: 'Borsi, Durg',
                     accountNumber: '747902010017132',
                     ifscCode: 'UBIN0576708'
+                },
+                leaveBalance: {
+                    casualLeave: 8,
+                    onDutyLeave: 0,
+                    leaveWithoutPay: 0
                 },
                 isActive: true
             },

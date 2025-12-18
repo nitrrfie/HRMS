@@ -163,44 +163,64 @@ router.put("/:id/approve", protect, async (req, res) => {
     const isAssignedApprover =
       leave.reportingTo && String(leave.reportingTo) === String(req.user._id);
     if (!isAdmin && !isAssignedApprover) {
-      return res
-        .status(403)
-        .json({
-          message:
-            "Access denied. Only assigned approver can approve this leave.",
-        });
+      return res.status(403).json({
+        message:
+          "Access denied. Only assigned approver can approve this leave.",
+      });
     }
 
-    const user = await User.findById(leave.user);
+    // Leave policy:
+    // - Casual Leave is limited by user's annual entitlement (user.leaveBalance.casualLeave)
+    // - On Duty Leave and Leave Without Pay are unlimited (approver decides)
+    const user = await User.findById(leave.user).select("leaveBalance");
+
+    let casualRemainingAfterApproval = user?.leaveBalance?.casualLeave ?? 0;
 
     if (leave.leaveType === "Casual Leave") {
-      if (user.leaveBalance.casualLeave < leave.numberOfDays) {
+      const year = new Date(leave.startDate).getFullYear();
+      const startOfYear = new Date(year, 0, 1);
+      const endOfYear = new Date(year, 11, 31, 23, 59, 59, 999);
+
+      const approvedSoFarAgg = await Leave.aggregate([
+        {
+          $match: {
+            user: leave.user,
+            status: "approved",
+            leaveType: "Casual Leave",
+            startDate: { $gte: startOfYear, $lte: endOfYear },
+          },
+        },
+        { $group: { _id: null, total: { $sum: "$numberOfDays" } } },
+      ]);
+
+      const approvedSoFar = Number(approvedSoFarAgg?.[0]?.total ?? 0);
+      const entitlement = Number(user?.leaveBalance?.casualLeave ?? 0);
+      const remainingBefore = Math.max(entitlement - approvedSoFar, 0);
+
+      if (leave.numberOfDays > remainingBefore) {
         return res
           .status(400)
           .json({ message: "Insufficient casual leave balance" });
       }
-      user.leaveBalance.casualLeave -= leave.numberOfDays;
-    } else if (leave.leaveType === "On Duty Leave") {
-      if (user.leaveBalance.onDutyLeave < leave.numberOfDays) {
-        return res
-          .status(400)
-          .json({ message: "Insufficient on duty leave balance" });
-      }
-      user.leaveBalance.onDutyLeave -= leave.numberOfDays;
-    } else {
-      user.leaveBalance.leaveWithoutPay += leave.numberOfDays;
-    }
 
-    await user.save();
+      casualRemainingAfterApproval = Math.max(
+        entitlement - (approvedSoFar + Number(leave.numberOfDays || 0)),
+        0
+      );
+    }
 
     leave.status = "approved";
     leave.reviewedBy = req.user._id;
     leave.reviewedOn = new Date();
     leave.reviewRemarks = remarks;
     leave.leaveBalanceAfter = {
-      casualLeave: user.leaveBalance.casualLeave,
-      onDutyLeave: user.leaveBalance.onDutyLeave,
-      leaveWithoutPay: user.leaveBalance.leaveWithoutPay,
+      casualLeave:
+        leave.leaveType === "Casual Leave"
+          ? casualRemainingAfterApproval
+          : user?.leaveBalance?.casualLeave,
+      // Unlimited leave types: keep schema values as-is (UI displays 'Unlimited')
+      onDutyLeave: user?.leaveBalance?.onDutyLeave,
+      leaveWithoutPay: user?.leaveBalance?.leaveWithoutPay,
     };
 
     await leave.save();
@@ -258,12 +278,9 @@ router.put("/:id/reject", protect, async (req, res) => {
     const isAssignedApprover =
       leave.reportingTo && String(leave.reportingTo) === String(req.user._id);
     if (!isAdmin && !isAssignedApprover) {
-      return res
-        .status(403)
-        .json({
-          message:
-            "Access denied. Only assigned approver can reject this leave.",
-        });
+      return res.status(403).json({
+        message: "Access denied. Only assigned approver can reject this leave.",
+      });
     }
 
     leave.status = "rejected";
