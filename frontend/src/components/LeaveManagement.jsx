@@ -57,11 +57,10 @@ const LeaveManagement = () => {
   });
 
   useEffect(() => {
-    if (activeTab === "requests") {
-      fetchPendingRequests();
-    } else {
+    if (activeTab !== "requests") {
       fetchMyLeaves();
-    }
+    } 
+    fetchPendingRequests();
   }, [activeTab]);
 
   useEffect(() => {
@@ -168,6 +167,21 @@ const LeaveManagement = () => {
       alert("Please fill all required fields");
       return;
     }
+
+    const requestedDays = Number(formData.numberOfDays || 0);
+    if(formData.leaveType === "Casual Leave"){
+      const remainingCasual=Number(leaveBalanceDisplay.casualLeave || 0);
+      if(!Number.isFinite(requestedDays) || requestedDays<=0){
+
+        alert("Please select a valid leave period.");
+        return;
+      }
+      if(requestedDays>remainingCasual){
+        alert(`Insufficient Casual Leave balance. Available : ${remainingCasual}, Requested: ${requestedDays}`);
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       const data = await leaveAPI.apply({
