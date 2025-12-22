@@ -27,6 +27,7 @@ import EFiling from "./EFiling";
 import Settings from "./Settings";
 import ProfileEdit from "./ProfileEdit";
 import "./Dashboard.css";
+import Calendar from "./calendar";
 
 const Dashboard = ({ onLogout }) => {
   const { user, isAdmin } = useAuth();
@@ -229,6 +230,8 @@ const Dashboard = ({ onLogout }) => {
         return <EFiling />;
       case "settings":
         return <Settings />;
+      case "calendar":
+        return <Calendar/>
       case "profile":
         return <ProfileEdit onBack={() => setActiveView("dashboard")} />;
       default:
@@ -322,6 +325,16 @@ const Dashboard = ({ onLogout }) => {
               >
                 <FileText size={20} />
                 {isSidebarOpen && <span>Remuneration</span>}
+              </button>
+            )}
+            {isManagerLevel && (
+              <button
+                className={`nav-item ${activeView === "calendar" ? "active" : ""
+                  }`}
+                onClick={() => setActiveView("calendar")}
+              >
+                <FileText size={20} />
+                {isSidebarOpen && <span>Calendar</span>}
               </button>
             )}
             {isManagerLevel && (
