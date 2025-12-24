@@ -15,8 +15,10 @@ const Remuneration = () => {
   const [casualLeaveData, setCasualLeaveData] = useState({});
   const [lwpData, setLwpData] = useState({});
   const [loadingLeaves, setLoadingLeaves] = useState(true);
+  
 
   const isFacultyInCharge = user?.role === "FACULTY_IN_CHARGE";
+  let netPayableDays;
 
   // Current month and year
   const currentDate = new Date();
@@ -345,7 +347,7 @@ const Remuneration = () => {
       totalVariable += parseFloat(emp.variableRemuneration) || 0;
       totalTDS += parseFloat(emp.tds) || 0;
       totalOther += parseFloat(emp.otherDeduction) || 0;
-      totalNetPayable += parseFloat(emp.netPayable) || 0;
+      totalNetPayable += parseFloat(calculateNetPayable(emp)) || 0;
     });
 
     return { totalVariable, totalTDS, totalOther, totalNetPayable };
@@ -363,6 +365,27 @@ const Remuneration = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const calculatePayableDays = (emp) => {
+    const daysWorked = attendanceData[emp.employeeId] || 0;
+    const casualLeave = casualLeaveData[emp.employeeId] || 0;
+    const holidays = parseFloat(emp.holidays) || 0;
+    netPayableDays = daysWorked + casualLeave + totalWeekendDays + holidays;
+    
+    // Payable Days = Days Worked + Casual Leave + Weekly Offs + Holidays
+    return netPayableDays;
+  };
+
+  const calculateNetPayable = (emp) => {
+    const daysWorked = attendanceData[emp.employeeId] || 0;
+    const grossRemuneration = parseFloat(emp.grossRemuneration) || 0;
+    
+    // Net Payable = (Gross Salary / Total Days in Month) × Days Worked
+    if (totalDaysInMonth === 0) return 0;
+    const netPayable = (grossRemuneration / totalDaysInMonth) * netPayableDays;
+    
+    return netPayable.toFixed(2);
   };
 
   const handleDownloadPDF = () => {
@@ -550,7 +573,7 @@ const Remuneration = () => {
                     )}
                   </td>
                   <td>{totalWeekendDays}</td>
-                  <td>19</td>
+                  <td>{emp.holidays}</td>
                   <td>
                     {loadingLeaves ? (
                       <span className="loading-text">Loading...</span>
@@ -561,7 +584,7 @@ const Remuneration = () => {
                     )}
                   </td>
                   <td>{totalDaysInMonth}</td>
-                  <td>{emp.payableDays}</td>
+                  <td>{calculatePayableDays(emp)}</td>
                   <td>
                     <input
                       type="number"
@@ -630,15 +653,11 @@ const Remuneration = () => {
                     />
                   </td>
                   <td>
-                    <input
-                      type="number"
-                      className="score-input wide-input"
-                      value={emp.netPayable}
-                      onChange={(e) =>
-                        handleChange(emp.id, "netPayable", e.target.value)
-                      }
-                      disabled={!isFacultyInCharge}
-                    />
+                    {loadingAttendance ? (
+                      <span className="loading-text">Loading...</span>
+                    ) : (
+                      calculateNetPayable(emp)
+                    )}
                   </td>
                   <td className="pan-cell">
                     <pre>{emp.panBankDetails}</pre>
