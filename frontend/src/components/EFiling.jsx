@@ -3,7 +3,7 @@ import {
     Send, Inbox, Clock, History, Upload, FileText, User, Download,
     Check, CheckCheck, Search, Filter, X, Paperclip, ChevronDown,
     File, Image, FileSpreadsheet, Presentation, Archive, AlertCircle, Activity,
-    ArrowRight, MapPin, GitCommit
+    ArrowRight, MapPin, GitCommit, CheckCircle2, Eye
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { efilingAPI, usersAPI } from '../services/api';
@@ -23,6 +23,7 @@ const EFiling = () => {
     const [history, setHistory] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [historyFilter, setHistoryFilter] = useState('');
+    const [selectedNode, setSelectedNode] = useState(null);
 
     // Send form state
     const [selectedFile, setSelectedFile] = useState(null);
@@ -31,6 +32,11 @@ const EFiling = () => {
     const [showRecipientDropdown, setShowRecipientDropdown] = useState(false);
     const [recipientSearch, setRecipientSearch] = useState('');
     const fileInputRef = useRef(null);
+
+    // Forward state
+    const [forwardDropdownOpen, setForwardDropdownOpen] = useState(null);
+    const [forwardRecipient, setForwardRecipient] = useState('');
+    const [forwardSearch, setForwardSearch] = useState('');
 
     useEffect(() => {
         fetchEmployees();
@@ -342,7 +348,59 @@ const EFiling = () => {
                             </div>
                             <div className="file-actions">
                                 <button className="download-btn" onClick={() => handleDownload(transfer)} title="Download"><Download size={18} /></button>
-                                {!transfer.isRead && <button className="mark-read-btn" onClick={() => handleMarkAsRead(transfer._id)} title="Mark as read"><Check size={18} /></button>}
+                                {!transfer.isRead && (
+                                    <button className="mark-read-btn" onClick={() => handleMarkAsRead(transfer._id)} title="Mark as read">
+                                        <Check size={18} />
+                                    </button>
+                                )}
+                                <div className="forward-wrapper">
+                                    <button 
+                                        className="forward-btn" 
+                                        onClick={() => setForwardDropdownOpen(forwardDropdownOpen === transfer._id ? null : transfer._id)}
+                                        title="Forward"
+                                    >
+                                        <Send size={18} />
+                                    </button>
+                                    {forwardDropdownOpen === transfer._id && (
+                                        <div className="forward-dropdown">
+                                            <div className="dropdown-header">
+                                                <h4>Forward to:</h4>
+                                                <button onClick={() => setForwardDropdownOpen(null)} className="close-btn">
+                                                    <X size={16} />
+                                                </button>
+                                            </div>
+                                            <div className="dropdown-search">
+                                                <Search size={16} />
+                                                <input
+                                                    type="text"
+                                                    placeholder="Search employees..."
+                                                    value={forwardSearch}
+                                                    onChange={(e) => setForwardSearch(e.target.value)}
+                                                    autoFocus
+                                                />
+                                            </div>
+                                            <div className="dropdown-list">
+                                                {employees.filter(emp => 
+                                                    getEmployeeName(emp).toLowerCase().includes(forwardSearch.toLowerCase())
+                                                ).map(emp => (
+                                                    <div
+                                                        key={emp._id}
+                                                        className="dropdown-item"
+                                                        onClick={() => handleForwardFile(transfer._id, emp._id)}
+                                                    >
+                                                        <User size={16} />
+                                                        <div className="emp-info">
+                                                            <span className="emp-name">{getEmployeeName(emp)}</span>
+                                                            {emp.employment?.designation && (
+                                                                <span className="emp-designation">{emp.employment.designation}</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     ))}
@@ -352,6 +410,34 @@ const EFiling = () => {
     );
 
 
+
+    const handleForwardFile = async (fileId, recipientId) => {
+        if (!fileId || !recipientId) return;
+
+        setLoading(true);
+        try {
+            const response = await efilingAPI.forwardFile({
+                originalTransferId: fileId,
+                recipientId: recipientId,
+                note: '' // Can add note field later if needed
+            });
+            
+            if (response.success) {
+                alert('File forwarded successfully!');
+                setForwardDropdownOpen(null);
+                setForwardSearch('');
+                fetchInbox();
+                fetchUnreadCount();
+            } else {
+                alert(response.message || 'Failed to forward file');
+            }
+        } catch (error) {
+            console.error('Failed to forward file:', error);
+            alert('Failed to forward file');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleForward = async () => {
         if (!forwardFileId || !selectedRecipient) return;
@@ -403,73 +489,205 @@ const EFiling = () => {
     const renderFileJourney = () => {
         if (!selectedThread) return null;
 
+        // Build the journey path - show unique users in order
+        const journeyPath = [];
+        selectedThread.forEach((step, index) => {
+            // Add sender for first step
+            if (index === 0) {
+                journeyPath.push({
+                    user: step.sender,
+                    status: 'sent',
+                    timestamp: step.createdAt,
+                    step: step,
+                    note: step.note
+                });
+            }
+            // Add recipient
+            journeyPath.push({
+                user: step.recipient,
+                status: step.isRead ? 'read' : 'delivered',
+                timestamp: step.createdAt,
+                step: step,
+                note: step.note,
+                isCurrentHolder: index === selectedThread.length - 1
+            });
+        });
+
         return (
             <div className="journey-view">
                 <div className="journey-header">
                     <button className="back-btn" onClick={() => setSelectedThread(null)} type="button">
-                        <ChevronDown className="rotate-90" /> Back to List
+                        <ArrowRight size={20} style={{ transform: 'rotate(180deg)' }} /> Back to List
                     </button>
-                    <h3>File Journey: {selectedThread[0]?.originalName}</h3>
+                    <div className="file-info">
+                        <div className="file-icon-large">{getFileIcon(selectedThread[0]?.fileType)}</div>
+                        <div>
+                            <h3>{selectedThread[0]?.originalName}</h3>
+                            <p>{formatFileSize(selectedThread[0]?.fileSize)} • {formatDateTime(selectedThread[0]?.createdAt)}</p>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="journey-timeline">
-                    {selectedThread.map((step, index) => {
-                        const isLast = index === selectedThread.length - 1;
-                        const isMe = step.recipient?._id === user?.id;
-
-                        return (
-                            <div key={step._id} className="timeline-node">
-                                <div className="node-connector">
-                                    <div className={`dot ${step.isRead ? 'read' : 'pending'}`}>
-                                        <GitCommit size={16} />
-                                    </div>
-                                    {!isLast && <div className="line"></div>}
-                                </div>
-                                <div className="node-content">
-                                    <div className="node-card">
-                                        <div className="node-header">
-                                            <span className="action-type">
-                                                {index === 0 ? 'Uploaded by' : 'Forwarded by'}
-                                            </span>
-                                            <span className="timestamp">{formatDateTime(step.createdAt)}</span>
-                                        </div>
-                                        <div className="user-info">
-                                            <div className="avatar">{step.sender?.profile?.firstName?.[0] || 'U'}</div>
-                                            <div className="details">
-                                                <span className="name">{getEmployeeName(step.sender)}</span>
-                                                <ArrowRight size={14} className="arrow" />
-                                                <span className="name">{getEmployeeName(step.recipient)}</span>
-                                            </div>
-                                        </div>
-                                        {step.note && (
-                                            <div className="node-note">
-                                                <Paperclip size={12} /> {step.note}
-                                            </div>
-                                        )}
-                                        <div className="node-status">
-                                            <span className={`status-badge ${step.isRead ? 'success' : 'pending'}`}>
-                                                {step.isRead ? 'Read' : 'Delivered'}
-                                            </span>
-                                            {isMe && (
-                                                <div className="node-actions">
-                                                    <button onClick={() => handleDownload(step)} title="Download" type="button">
-                                                        <Download size={14} />
-                                                    </button>
-                                                    <button onClick={() => {
-                                                        setForwardFileId(step._id);
-                                                        setIsForwarding(true);
-                                                    }} title="Forward" type="button">
-                                                        <Send size={14} />
-                                                    </button>
+                <div className="timeline-container">
+                    {(() => {
+                        // Split journey path into rows of 5
+                        const rows = [];
+                        const itemsPerRow = 5;
+                        
+                        for (let i = 0; i < journeyPath.length; i += itemsPerRow) {
+                            rows.push(journeyPath.slice(i, i + itemsPerRow));
+                        }
+                        
+                        return rows.map((row, rowIndex) => {
+                            // Odd rows (1,3,5...) go right-to-left, even rows (0,2,4...) go left-to-right
+                            const isReversed = rowIndex % 2 === 1;
+                            const isLastRow = rowIndex === rows.length - 1;
+                            
+                            // For reversed rows, reverse the array so DOM order matches visual order
+                            const displayRow = isReversed ? [...row].reverse() : row;
+                            
+                            return (
+                                <div key={rowIndex} className={`timeline-row ${isReversed ? 'reversed' : 'normal'}`}>
+                                    {displayRow.map((node, displayIndex) => {
+                                        // Calculate original data index
+                                        const dataIndex = isReversed ? row.length - 1 - displayIndex : displayIndex;
+                                        const originalIndex = rowIndex * itemsPerRow + dataIndex;
+                                        
+                                        // Determine if this step needs connectors
+                                        const isLastInDisplay = displayIndex === displayRow.length - 1;
+                                        
+                                        // Horizontal connector: all except last in display order
+                                        const hasHorizontalConnector = !isLastInDisplay;
+                                        
+                                        // Vertical connector: last item in display (rightmost) drops down to next row
+                                        const hasVerticalConnector = !isLastRow && isLastInDisplay;
+                                        
+                                        const userName = node.user?.profile?.firstName
+                                            ? `${node.user.profile.firstName} ${node.user.profile.lastName || ''}`
+                                            : node.user?.username || 'Unknown';
+                                        
+                                        return (
+                                            <div 
+                                                key={`${node.user?._id}-${originalIndex}`} 
+                                                className={`timeline-step ${node.isCurrentHolder ? 'current-holder' : ''} ${hasHorizontalConnector ? 'has-horizontal' : ''} ${hasVerticalConnector ? 'has-vertical' : ''}`}
+                                                onClick={() => setSelectedNode(node)}
+                                            >
+                                                <div className="step-icon">
+                                                    <MapPin size={32} />
                                                 </div>
-                                            )}
-                                        </div>
-                                    </div>
+                                                <div className="step-content">
+                                                    <div className="step-name">{userName}</div>
+                                                    <div className="step-status">
+                                                        {node.status === 'sent' && 'Sent'}
+                                                        {node.status === 'delivered' && 'Delivered'}
+                                                        {node.status === 'read' && 'Read / Approved'}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            );
+                        });
+                    })()}
+                </div>
+
+                {/* Detail Modal */}
+                {selectedNode && (
+                    <div className="detail-modal-overlay" onClick={() => setSelectedNode(null)}>
+                        <div className="detail-modal-content" onClick={(e) => e.stopPropagation()}>
+                            <button className="modal-close" onClick={() => setSelectedNode(null)}>
+                                <X size={20} />
+                            </button>
+                            
+                            <div className="modal-header-section">
+                                <div className="user-avatar-large">
+                                    {selectedNode.user?.profile?.firstName
+                                        ? `${selectedNode.user.profile.firstName[0]}${selectedNode.user.profile.lastName?.[0] || ''}`
+                                        : (selectedNode.user?.username?.[0] || 'U')}
+                                </div>
+                                <div>
+                                    <h3>
+                                        {selectedNode.user?.profile?.firstName
+                                            ? `${selectedNode.user.profile.firstName} ${selectedNode.user.profile.lastName || ''}`
+                                            : selectedNode.user?.username || 'Unknown'}
+                                    </h3>
+                                    <p>{selectedNode.user?.employment?.designation || 'Employee'}</p>
                                 </div>
                             </div>
-                        );
-                    })}
-                </div>
+
+                            <div className="modal-detail-row">
+                                <span className="detail-label">Status:</span>
+                                <div className={`status-badge-large status-${selectedNode.status}`}>
+                                    {selectedNode.status === 'sent' && <><Send size={14} /> Sent</>}
+                                    {selectedNode.status === 'delivered' && <><CheckCircle2 size={14} /> Delivered</>}
+                                    {selectedNode.status === 'read' && <><Eye size={14} /> Read/Approved</>}
+                                </div>
+                            </div>
+
+                            <div className="modal-detail-row">
+                                <span className="detail-label">Time:</span>
+                                <span className="detail-value">
+                                    <Clock size={14} /> {formatDateTime(selectedNode.timestamp)}
+                                </span>
+                            </div>
+
+                            {selectedNode.user?.email && (
+                                <div className="modal-detail-row">
+                                    <span className="detail-label">Email:</span>
+                                    <span className="detail-value">{selectedNode.user.email}</span>
+                                </div>
+                            )}
+
+                            {selectedNode.note && (
+                                <div className="modal-detail-row">
+                                    <span className="detail-label">Note:</span>
+                                    <div className="detail-note">
+                                        <Paperclip size={14} />
+                                        <span>{selectedNode.note}</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {selectedNode.isCurrentHolder && (
+                                <div className="modal-detail-row">
+                                    <span className="detail-label">Current Holder:</span>
+                                    <span className="detail-value current-badge">
+                                        <MapPin size={14} /> Yes
+                                    </span>
+                                </div>
+                            )}
+
+                            <div className="modal-actions-section">
+                                {selectedNode.user?._id === user?.id && selectedNode.step && (
+                                    <>
+                                        <button 
+                                            onClick={() => {
+                                                handleDownload(selectedNode.step);
+                                                setSelectedNode(null);
+                                            }} 
+                                            className="modal-action-btn download"
+                                        >
+                                            <Download size={16} /> Download File
+                                        </button>
+                                        {selectedNode.isCurrentHolder && (
+                                            <button 
+                                                onClick={() => {
+                                                    setForwardFileId(selectedNode.step._id);
+                                                    setIsForwarding(true);
+                                                    setSelectedNode(null);
+                                                }} 
+                                                className="modal-action-btn forward"
+                                            >
+                                                <Send size={16} /> Forward File
+                                            </button>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         );
     };

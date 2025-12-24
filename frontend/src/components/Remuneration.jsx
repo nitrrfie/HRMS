@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { Download, Save } from "lucide-react";
-import { usersAPI, attendanceAPI } from "../services/api";
+import { usersAPI, attendanceAPI, leaveAPI } from "../services/api";
 
 const Remuneration = () => {
   const { user } = useAuth();
@@ -12,6 +12,9 @@ const Remuneration = () => {
   const contentRef = useRef(null);
   const [attendanceData, setAttendanceData] = useState({});
   const [loadingAttendance, setLoadingAttendance] = useState(true);
+  const [casualLeaveData, setCasualLeaveData] = useState({});
+  const [lwpData, setLwpData] = useState({});
+  const [loadingLeaves, setLoadingLeaves] = useState(true);
 
   const isFacultyInCharge = user?.role === "FACULTY_IN_CHARGE";
 
@@ -63,6 +66,7 @@ const Remuneration = () => {
   // Fetch attendance data for all employees on mount
   useEffect(() => {
     fetchAllEmployeesAttendance();
+    fetchAllEmployeesLeaves();
   }, [currentMonth, currentYear]);
 
   const fetchAllEmployeesAttendance = async () => {
@@ -131,6 +135,77 @@ const Remuneration = () => {
       console.error("Failed to fetch attendance data:", error);
     } finally {
       setLoadingAttendance(false);
+    }
+  };
+
+  const fetchAllEmployeesLeaves = async () => {
+    setLoadingLeaves(true);
+    try {
+      // Fetch all users first
+      const usersResponse = await usersAPI.getAll();
+
+      if (usersResponse.success && usersResponse.users) {
+        // Get start and end of current month
+        const startOfMonth = new Date(currentYear, currentDate.getMonth(), 1);
+        const endOfMonth = new Date(currentYear, currentDate.getMonth() + 1, 0);
+
+        // Fetch all approved leaves
+        const leavesResponse = await leaveAPI.getAll("approved");
+
+        if (leavesResponse.success && leavesResponse.leaves) {
+          // Create maps for both casual leave and LWP
+          const casualLeaveMap = {};
+          const lwpMap = {};
+
+          // Initialize all users with 0 days
+          usersResponse.users.forEach((userData) => {
+            casualLeaveMap[userData.employeeId] = 0;
+            lwpMap[userData.employeeId] = 0;
+          });
+
+          // Calculate leave days for each user
+          leavesResponse.leaves.forEach((leave) => {
+            if (leave.user) {
+              const leaveStart = new Date(leave.startDate);
+              const leaveEnd = new Date(leave.endDate);
+
+              // Check if leave overlaps with current month
+              if (leaveStart <= endOfMonth && leaveEnd >= startOfMonth) {
+                // Find user's employeeId
+                const userData = usersResponse.users.find(
+                  (u) => u._id === leave.user._id || u._id === leave.user
+                );
+                if (userData && userData.employeeId) {
+                  // Calculate days in current month
+                  const overlapStart =
+                    leaveStart > startOfMonth ? leaveStart : startOfMonth;
+                  const overlapEnd =
+                    leaveEnd < endOfMonth ? leaveEnd : endOfMonth;
+
+                  const daysDiff =
+                    Math.ceil(
+                      (overlapEnd - overlapStart) / (1000 * 60 * 60 * 24)
+                    ) + 1;
+
+                  // Add to appropriate map based on leave type
+                  if (leave.leaveType === "Casual Leave") {
+                    casualLeaveMap[userData.employeeId] += daysDiff;
+                  } else if (leave.leaveType === "Leave Without Pay") {
+                    lwpMap[userData.employeeId] += daysDiff;
+                  }
+                }
+              }
+            }
+          });
+
+          setCasualLeaveData(casualLeaveMap);
+          setLwpData(lwpMap);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch leave data:", error);
+    } finally {
+      setLoadingLeaves(false);
     }
   };
 
@@ -465,10 +540,26 @@ const Remuneration = () => {
                       emp.daysWorked || 0
                     )}
                   </td>
-                  <td>{emp.casualLeave}</td>
+                  <td>
+                    {loadingLeaves ? (
+                      <span className="loading-text">Loading...</span>
+                    ) : casualLeaveData[emp.employeeId] !== undefined ? (
+                      casualLeaveData[emp.employeeId]
+                    ) : (
+                      0
+                    )}
+                  </td>
                   <td>{totalWeekendDays}</td>
-                  <td>{emp.holidays}</td>
-                  <td>{emp.lwpDays}</td>
+                  <td>19</td>
+                  <td>
+                    {loadingLeaves ? (
+                      <span className="loading-text">Loading...</span>
+                    ) : lwpData[emp.employeeId] !== undefined ? (
+                      lwpData[emp.employeeId]
+                    ) : (
+                      0
+                    )}
+                  </td>
                   <td>{totalDaysInMonth}</td>
                   <td>{emp.payableDays}</td>
                   <td>
