@@ -195,17 +195,9 @@ const ProfileEdit = ({ onBack }) => {
                             <input
                                 type="text"
                                 name="designation"
-                                value={formData.designation}
+                                value={formData.designation == "ACCOUNTANT" ? formData.designation + " cum Administrator" : formData.designation}
                                 onChange={handleChange}
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label>Department</label>
-                            <input
-                                type="text"
-                                name="department"
-                                value={formData.department}
-                                onChange={handleChange}
+                                readOnly
                             />
                         </div>
                     </div>
