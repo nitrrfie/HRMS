@@ -3,6 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { protect } = require('../middleware/auth');
+const { validateRole } = require('../middleware/validateRole');
 
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -10,7 +11,7 @@ const generateToken = (id) => {
     });
 };
 
-router.post('/register', protect, async(req, res) =>{
+router.post('/register', protect, validateRole, async(req, res) =>{
     try{
         const { employeeId, username, email, password, role, profile, employment } = req.body;
 

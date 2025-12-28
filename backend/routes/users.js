@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const User = require('../models/User');
 const { protect, isAdminOrCEO, authorize } = require('../middleware/auth');
+const { validateRole } = require('../middleware/validateRole');
 
 // Ensure uploads directory exists for profile photos
 const uploadDir = path.join(__dirname, '../uploads/profile-photos');
@@ -211,7 +212,7 @@ router.post('/', protect, isAdminOrCEO, async (req, res) => {
     }
 });
 
-router.put('/:id', protect, isAdminOrCEO, async (req, res) => {
+router.put('/:id', protect, isAdminOrCEO, validateRole, async (req, res) => {
     try {
         const { profile, employment, role, isActive, leaveBalance } = req.body;
         

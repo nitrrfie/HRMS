@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const { SYSTEM_ROLES } = require('../lib/roles');
 
 const UserSchema = new mongoose.Schema({
     employeeId: {
@@ -23,7 +24,7 @@ const UserSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['ADMIN', 'CEO', 'INCUBATION_MANAGER', 'ACCOUNTANT', 'OFFICER_IN_CHARGE', 'FACULTY_IN_CHARGE', 'EMPLOYEE'],
+        enum: SYSTEM_ROLES,
         default: 'EMPLOYEE'
     },
     profile: {
