@@ -34,6 +34,7 @@ const Dashboard = ({ onLogout }) => {
   const [activeView, setActiveView] = useState("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [dashboardData, setDashboardData] = useState({
     stats: { totalEmployees: 0, presentToday: 0, onLeave: 0, pendingLeaves: 0 },
     employeeAttendance: [],
@@ -44,6 +45,16 @@ const Dashboard = ({ onLogout }) => {
   useEffect(() => {
     const timer = setInterval(() => setCurrentDateTime(new Date()), 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.user-profile-preview')) {
+        setShowProfileMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   useEffect(() => {
@@ -139,16 +150,6 @@ const Dashboard = ({ onLogout }) => {
         <div className="ceo-header-left">
           <h1>Dashboard</h1>
           <p>Welcome back, {user?.username || "CEO"}</p>
-        </div>
-        <div className="ceo-header-right">
-          <span className="current-date">{formatDateTime()}</span>
-          <button
-            className="profile-edit-btn"
-            onClick={() => setActiveView("profile")}
-          >
-            <UserCircle size={20} />
-            <span>Edit Profile</span>
-          </button>
         </div>
       </header>
 
@@ -356,13 +357,6 @@ const Dashboard = ({ onLogout }) => {
               </button>
             )}
           </nav>
-
-          <div className="sidebar-footer">
-            <button className="nav-item logout" onClick={onLogout}>
-              <LogOut size={20} />
-              {isSidebarOpen && <span>Logout</span>}
-            </button>
-          </div>
         </aside>
 
         {/* Main Content */}
@@ -376,7 +370,7 @@ const Dashboard = ({ onLogout }) => {
             </button>
             <div className="top-bar-right">
               <span className="current-date">{formatDateTime()}</span>
-              <div className="user-profile-preview">
+              <div className="user-profile-preview" onClick={() => setShowProfileMenu(!showProfileMenu)}>
                 <div className="user-avatar">
                   {user?.profile?.photo ? (
                     <img 
@@ -394,6 +388,32 @@ const Dashboard = ({ onLogout }) => {
                   )}
                 </div>
                 <span className="user-name">{user?.username || "User"}</span>
+                {showProfileMenu && (
+                  <div className="profile-dropdown-menu">
+                    <button 
+                      className="profile-menu-item"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveView("profile");
+                        setShowProfileMenu(false);
+                      }}
+                    >
+                      <UserCircle size={18} />
+                      <span>Edit Profile</span>
+                    </button>
+                    <button 
+                      className="profile-menu-item logout"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowProfileMenu(false);
+                        onLogout();
+                      }}
+                    >
+                      <LogOut size={18} />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </header>
