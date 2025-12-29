@@ -409,6 +409,7 @@ export const remunerationAPI = {
             headers: { ...getAuthHeader() }
         });
         return response.json();
+<<<<<<< HEAD
     },
 
     save: async (remunerationData, month, year) => {
@@ -435,6 +436,8 @@ export const remunerationAPI = {
             headers: { ...getAuthHeader() }
         });
         return response.json();
+=======
+>>>>>>> parent of 28b11e6 (Updated Remuneration Page)
     }
 };
 

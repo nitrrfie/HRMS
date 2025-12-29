@@ -2,8 +2,11 @@ const express = require('express');
 const router = express.Router();
 const Attendance = require('../models/Attendance');
 const User = require('../models/User');
+<<<<<<< HEAD
 const Remuneration = require('../models/Remuneration');
 const RolePermission = require('../models/RolePermission');
+=======
+>>>>>>> parent of 28b11e6 (Updated Remuneration Page)
 const { protect, isManagement } = require('../middleware/auth');
 
 // Indian National Holidays 2025 (Gazetted)
@@ -197,6 +200,7 @@ router.get('/attendance-summary', protect, isManagement, async (req, res) => {
     }
 });
 
+<<<<<<< HEAD
 // @route   POST /api/remuneration/save
 // @desc    Save or update remuneration data for employees
 // @access  Management only
@@ -392,4 +396,6 @@ router.get('/salary', protect, async (req, res) => {
     }
 });
 
+=======
+>>>>>>> parent of 28b11e6 (Updated Remuneration Page)
 module.exports = router;
