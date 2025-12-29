@@ -103,12 +103,6 @@
     font-size: 1rem;
 }
 
-.signature-section {
-    display: flex;
-    justify-content: flex-end;
-    padding-right: 2rem;
-    margin-top: 2rem;
-}
 
 .signature {
     text-align: center;

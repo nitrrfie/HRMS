@@ -3,6 +3,7 @@ import { Clock, LogIn, LogOut, Calendar, CheckCircle, XCircle } from 'lucide-rea
 import { useAuth } from '../context/AuthContext';
 import { attendanceAPI } from '../services/api';
 import './AttendanceRecord.css';
+import { hours_attendance } from '../services/attendance';
 
 const AttendanceRecord = () => {
     const { user } = useAuth();
@@ -74,7 +75,7 @@ const AttendanceRecord = () => {
 
     const isCheckInDisabled = () => {
         const hours = currentTime.getHours();
-        return hours >= 11 || checkInTime !== null || loading;
+        return hours >= hours_attendance || checkInTime !== null || loading;
     };
 
     const isCheckOutDisabled = () => {
@@ -154,8 +155,8 @@ const AttendanceRecord = () => {
                     <div className="clock-date">
                         {currentTime.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                     </div>
-                    {currentTime.getHours() >= 11 && !checkInTime && (
-                        <div className="late-warning">Check-in closed after 11:00 AM</div>
+                    {currentTime.getHours() >= hours_attendance && !checkInTime && (
+                        <div className="late-warning">Check-in closed after {hours_attendance}:00 AM</div>
                     )}
                 </div>
 
@@ -225,8 +226,8 @@ const AttendanceRecord = () => {
 
             <div className="today-status-section">
                 <h3>Today's Status</h3>
-                <div className={`status-badge-large ${checkInTime ? (checkOutTime ? 'completed' : 'working') : (currentTime.getHours() >= 11 ? 'absent' : 'pending')}`}>
-                    {checkInTime ? (checkOutTime ? 'Attendance Completed' : 'Currently Working') : (currentTime.getHours() >= 11 ? 'Marked Absent' : 'Not Checked In Yet')}
+                <div className={`status-badge-large ${checkInTime ? (checkOutTime ? 'completed' : 'working') : (currentTime.getHours() >= hours_attendance ? 'absent' : 'pending')}`}>
+                    {checkInTime ? (checkOutTime ? 'Attendance Completed' : 'Currently Working') : (currentTime.getHours() >= hours_attendance ? 'Marked Absent' : 'Not Checked In Yet')}
                 </div>
             </div>
         </div>
