@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Save, Download } from 'lucide-react';
-import { usersAPI, authAPI } from '../services/api';
+import { remunerationAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -30,64 +30,33 @@ const Salary = () => {
     useEffect(() => {
         const fetchEmployees = async () => {
             try {
-                if (canViewAllSalaries) {
-                    // Can see all employees
-                    const response = await usersAPI.getAll();
-                    if (response.success && response.users) {
-                        const filteredUsers = response.users.filter(
-                            user => user.role !== 'FACULTY_IN_CHARGE' && user.role !== 'OFFICER_IN_CHARGE'
-                        );
-                        
-                        const employeesWithSalary = filteredUsers.map(user => ({
-                            id: user._id,
-                            name: `${user.profile?.firstName || ''} ${user.profile?.lastName || ''}`.trim() || user.username,
-                            designation: user.employment?.designation || 'N/A',
-                            employeeId: user.employeeId || 'N/A',
-                            pan: user.documents?.pan?.number || (typeof user.documents?.pan === 'string' ? user.documents.pan : 'N/A'),
-                            bankAccount: user.bankDetails?.accountNumber || 'N/A',
-                            fixedPay: user.employment?.baseSalary || 24000,
-                            variablePay: user.employment?.maxVariableRemuneration || 6000,
-                            others: 0,
-                            tds: 0,
-                            nps: 0,
-                            otherDeductions: 0
-                        }));
-
-                        setEmployees(employeesWithSalary);
+                // Fetch salary data directly from remuneration collection
+                const response = await remunerationAPI.getSalary(currentMonth, currentYear);
+                console.log('Salary Response:', response);
+                
+                if (response.success && response.employees) {
+                    setEmployees(response.employees);
+                    
+                    // If user can only view own salary, auto-select their record
+                    if (!response.canViewAll && response.canViewOwn && response.employees.length > 0) {
+                        const ownRecord = response.employees[0];
+                        setSelectedEmployee(ownRecord);
+                        setSearchName(ownRecord.name);
                     }
-                } else if (canViewOwnSalary || !canViewAllSalaries) {
-                    // Regular employee can only see their own salary
-                    const response = await authAPI.getProfile();
-                    if (response.success && response.user) {
-                        const currentUser = response.user;
-                        const employeeData = {
-                            id: currentUser._id,
-                            name: `${currentUser.profile?.firstName || ''} ${currentUser.profile?.lastName || ''}`.trim() || currentUser.username,
-                            designation: currentUser.employment?.designation || 'N/A',
-                            employeeId: currentUser.employeeId || 'N/A',
-                            pan: currentUser.documents?.pan?.number || (typeof currentUser.documents?.pan === 'string' ? currentUser.documents.pan : 'N/A'),
-                            bankAccount: currentUser.bankDetails?.accountNumber || 'N/A',
-                            fixedPay: currentUser.employment?.baseSalary || 24000,
-                            variablePay: currentUser.employment?.maxVariableRemuneration || 6000,
-                            others: 0,
-                            tds: 0,
-                            nps: 0,
-                            otherDeductions: 0
-                        };
-                        setEmployees([employeeData]);
-                        setSelectedEmployee(employeeData);
-                        setSearchName(employeeData.name);
-                    }
+                } else {
+                    console.warn('No salary data available:', response.message);
+                    setEmployees([]);
                 }
             } catch (error) {
-                console.error('Failed to fetch employees:', error);
+                console.error('Failed to fetch salary data:', error);
+                setEmployees([]);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchEmployees();
-    }, [canViewAllSalaries, canViewOwnSalary]);
+    }, [canViewAllSalaries, canViewOwnSalary, currentMonth, currentYear]);
 
     useEffect(() => {
         if (selectedEmployee) {
@@ -149,10 +118,28 @@ const Salary = () => {
         
         setSaving(true);
         try {
-            setEmployees(employees.map(emp => 
-                emp.id === selectedEmployee.id ? selectedEmployee : emp
-            ));
-            alert('Salary data saved successfully!');
+            // Prepare remuneration data to save
+            const remunerationData = [{
+                employeeId: selectedEmployee.id,
+                employeeIdString: selectedEmployee.employeeId,
+                fixedRemuneration: parseFloat(selectedEmployee.fixedPay) || 0,
+                variableRemuneration: parseFloat(selectedEmployee.variablePay) || 0,
+                tds: parseFloat(selectedEmployee.tds) || 0,
+                otherDeduction: parseFloat(selectedEmployee.otherDeductions) || 0,
+                grossRemuneration: calculateGrossSalary(),
+                netPayable: calculateNetSalary()
+            }];
+            
+            const response = await remunerationAPI.save(remunerationData, currentMonth, currentYear);
+            
+            if (response.success) {
+                setEmployees(employees.map(emp => 
+                    emp.id === selectedEmployee.id ? selectedEmployee : emp
+                ));
+                alert('Salary data saved successfully!');
+            } else {
+                alert(response.message || 'Failed to save data. Please try again.');
+            }
         } catch (error) {
             console.error('Save failed:', error);
             alert('Failed to save data. Please try again.');

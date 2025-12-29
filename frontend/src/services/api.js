@@ -428,6 +428,13 @@ export const remunerationAPI = {
             headers: { ...getAuthHeader() }
         });
         return response.json();
+    },
+
+    getSalary: async (month, year) => {
+        const response = await fetch(`${API_URL}/remuneration/salary?month=${month}&year=${year}`, {
+            headers: { ...getAuthHeader() }
+        });
+        return response.json();
     }
 };
 

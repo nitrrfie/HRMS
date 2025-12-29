@@ -3,6 +3,7 @@ const router = express.Router();
 const Attendance = require('../models/Attendance');
 const User = require('../models/User');
 const Remuneration = require('../models/Remuneration');
+const RolePermission = require('../models/RolePermission');
 const { protect, isManagement } = require('../middleware/auth');
 
 // Indian National Holidays 2025 (Gazetted)
@@ -264,7 +265,7 @@ router.get('/get', protect, isManagement, async (req, res) => {
         const records = await Remuneration.find({
             month,
             year: parseInt(year)
-        }).populate('employee', 'username profile employment');
+        }).populate('employee', 'username profile employment employeeId documents bankDetails');
 
         // Create a map of employeeId to remuneration data
         const remunerationMap = {};
@@ -289,13 +290,104 @@ router.get('/get', protect, isManagement, async (req, res) => {
                 tds: record.tds,
                 otherDeduction: record.otherDeduction,
                 netPayable: record.netPayable,
-                panBankDetails: record.panBankDetails
+                panBankDetails: record.panBankDetails,
+                pan: record.employee.documents?.pan?.number || (typeof record.employee.documents?.pan === 'string' ? record.employee.documents.pan : 'N/A'),
+                bankAccount: record.employee.bankDetails?.accountNumber || 'N/A'
             };
         });
 
         res.json({ success: true, remunerationMap, records: Object.values(remunerationMap) });
     } catch (error) {
         console.error('Error fetching remuneration:', error);
+        res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    }
+});
+
+// @route   GET /api/remuneration/salary
+// @desc    Get salary data for employees with permission checks
+// @access  Protected - requires salary.viewAll or salary.viewOwn permission
+router.get('/salary', protect, async (req, res) => {
+    try {
+        const { month, year } = req.query;
+
+        if (!month || !year) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Month and year are required' 
+            });
+        }
+
+        // Fetch user permissions from RolePermission model
+        const rolePermission = await RolePermission.findOne({ roleId: req.user.role });
+        
+        if (!rolePermission) {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'No permissions found for your role' 
+            });
+        }
+
+        // Check if user has salary viewing permissions
+        const canViewAll = rolePermission.featureAccess.some(
+            p => p.featureId === 'salary.viewAll' && p.hasAccess
+        );
+        const canViewOwn = rolePermission.featureAccess.some(
+            p => p.featureId === 'salary.viewOwn' && p.hasAccess
+        );
+
+        if (!canViewAll && !canViewOwn) {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'You do not have permission to view salary data' 
+            });
+        }
+
+        let query = {
+            month,
+            year: parseInt(year)
+        };
+
+        // If user can only view their own salary, restrict to their employee record
+        if (!canViewAll && canViewOwn) {
+            query.employee = req.user._id;
+        }
+
+        const records = await Remuneration.find(query)
+            .populate('employee', 'username profile employment employeeId documents bankDetails role');
+
+        // Filter out FACULTY_IN_CHARGE and OFFICER_IN_CHARGE
+        const filteredRecords = records.filter(record => 
+            record.employee && 
+            record.employee.role !== 'FACULTY_IN_CHARGE' && 
+            record.employee.role !== 'OFFICER_IN_CHARGE'
+        );
+
+        // Format the data for frontend
+        const salaryData = filteredRecords.map(record => ({
+            id: record.employee._id,
+            employeeId: record.employeeId,
+            name: `${record.employee.profile?.firstName || ''} ${record.employee.profile?.lastName || ''}`.trim() || record.employee.username,
+            designation: record.employee.employment?.designation || 'N/A',
+            pan: record.employee.documents?.pan?.number || (typeof record.employee.documents?.pan === 'string' ? record.employee.documents.pan : 'N/A'),
+            bankAccount: record.employee.bankDetails?.accountNumber || 'N/A',
+            fixedPay: record.fixedRemuneration || 0,
+            variablePay: record.variableRemuneration || 0,
+            others: 0,
+            tds: record.tds || 0,
+            nps: 0,
+            otherDeductions: record.otherDeduction || 0,
+            grossRemuneration: record.grossRemuneration || 0,
+            netPayable: record.netPayable || 0
+        }));
+
+        res.json({ 
+            success: true, 
+            employees: salaryData,
+            canViewAll,
+            canViewOwn 
+        });
+    } catch (error) {
+        console.error('Error fetching salary data:', error);
         res.status(500).json({ success: false, message: 'Server error', error: error.message });
     }
 });
