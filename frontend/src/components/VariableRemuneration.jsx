@@ -4,12 +4,17 @@ import { usersAPI, peerRatingAPI, variableRemunerationAPI } from '../services/ap
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { Download, Save } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const VariableRemuneration = () => {
+    const { canAccessFeature } = useAuth();
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const contentRef = useRef(null);
+    
+    // Check if user has permission to manage variable remuneration
+    const canManage = canAccessFeature('remuneration.variable');
 
     // Get current month and year
     const currentDate = new Date();
@@ -88,6 +93,12 @@ const VariableRemuneration = () => {
     };
 
     const handleScoreChange = (id, field, value) => {
+        // Check permission before allowing changes
+        if (!canManage) {
+            alert('You do not have permission to manage variable remuneration.');
+            return;
+        }
+        
         // Validate input (0-20)
         let numValue = value === "" ? "" : parseFloat(value);
         if (numValue !== "" && (numValue < 0 || numValue > 20)) return;
@@ -98,6 +109,12 @@ const VariableRemuneration = () => {
     };
 
     const handleSave = async () => {
+        // Check permission before saving
+        if (!canManage) {
+            alert('You do not have permission to manage variable remuneration.');
+            return;
+        }
+        
         setSaving(true);
         try {
             const remunerationData = employees.map(emp => {
@@ -211,14 +228,16 @@ const VariableRemuneration = () => {
     return (
         <div className="remuneration-page-container">
             <div className="remuneration-actions">
-                <button
-                    className="action-btn save-btn"
-                    onClick={handleSave}
-                    disabled={saving}
-                >
-                    <Save size={18} />
-                    {saving ? 'Saving...' : 'Save Ratings'}
-                </button>
+                {canManage && (
+                    <button
+                        className="action-btn save-btn"
+                        onClick={handleSave}
+                        disabled={saving}
+                    >
+                        <Save size={18} />
+                        {saving ? 'Saving...' : 'Save Ratings'}
+                    </button>
+                )}
                 <button
                     className="action-btn download-btn"
                     onClick={handleDownloadPDF}
@@ -270,8 +289,8 @@ const VariableRemuneration = () => {
                                                 className="score-input"
                                                 value={emp.punctuality}
                                                 onChange={(e) => handleScoreChange(emp.id, 'punctuality', e.target.value)}
-                                                max="20"
-                                                min="0"
+                                                readOnly={!canManage}
+                                                style={!canManage ? { backgroundColor: '#f5f5f5', cursor: 'not-allowed' } : {}}
                                             />
                                         </td>
                                         <td>
@@ -282,6 +301,8 @@ const VariableRemuneration = () => {
                                                 onChange={(e) => handleScoreChange(emp.id, 'sincerity', e.target.value)}
                                                 max="20"
                                                 min="0"
+                                                readOnly={!canManage}
+                                                style={!canManage ? { backgroundColor: '#f5f5f5', cursor: 'not-allowed' } : {}}
                                             />
                                         </td>
                                         <td>
@@ -292,6 +313,8 @@ const VariableRemuneration = () => {
                                                 onChange={(e) => handleScoreChange(emp.id, 'responsiveness', e.target.value)}
                                                 max="20"
                                                 min="0"
+                                                readOnly={!canManage}
+                                                style={!canManage ? { backgroundColor: '#f5f5f5', cursor: 'not-allowed' } : {}}
                                             />
                                         </td>
                                         <td>
@@ -302,6 +325,8 @@ const VariableRemuneration = () => {
                                                 onChange={(e) => handleScoreChange(emp.id, 'assignedTask', e.target.value)}
                                                 max="20"
                                                 min="0"
+                                                readOnly={!canManage}
+                                                style={!canManage ? { backgroundColor: '#f5f5f5', cursor: 'not-allowed' } : {}}
                                             />
                                         </td>
                                         <td>
