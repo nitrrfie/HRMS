@@ -223,7 +223,7 @@ router.get('/today', protect, async (req, res) => {
     }
 });
 
-router.get('/all', protect, isAdminOrCEO, async (req, res) => {
+router.get('/all', protect, async (req, res) => {
     try {
         const { date } = req.query;
         
@@ -293,7 +293,7 @@ router.get('/all', protect, isAdminOrCEO, async (req, res) => {
     }
 });
 
-router.get('/user/:userId', protect, isAdminOrCEO, async (req, res) => {
+router.get('/user/:userId', protect, async (req, res) => {
     try {
         const { month, year } = req.query;
         
