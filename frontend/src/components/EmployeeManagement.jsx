@@ -337,10 +337,6 @@ const EmployeeManagement = () => {
                                 <div className="profile-section">
                                     <h4><Building size={18} /> Employment Details</h4>
                                     <div className="info-row">
-                                        <span className="info-label">Department</span>
-                                        <span className="info-value">{selectedEmployee.employment?.department || 'N/A'}</span>
-                                    </div>
-                                    <div className="info-row">
                                         <span className="info-label">Designation</span>
                                         <span className="info-value">{selectedEmployee.employment?.designation || 'N/A'}</span>
                                     </div>
