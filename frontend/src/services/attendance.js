@@ -1,0 +1,1 @@
+export const hours_attendance = 13;
