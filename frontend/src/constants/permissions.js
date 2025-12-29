@@ -172,20 +172,29 @@ export const canAccessFeature = (featureId, user) => {
 /**
  * Get navigation items accessible to current user based on database permissions
  * Uses the canAccessComponentFn from AuthContext to check database permissions
+ * Falls back to role-based allowedRoles if database permissions are not set
  */
 export const getAccessibleNavItems = (user, canAccessComponentFn) => {
     if (!user || !user.role) return [];
     
-    // Use database permissions if function provided
-    if (canAccessComponentFn) {
-        return NAVIGATION_ITEMS.filter(item => {
-            return canAccessComponentFn(item.view);
-        });
-    }
-    
-    // Fallback: return empty if no permission function (forces database usage)
-    console.warn('getAccessibleNavItems called without canAccessComponentFn. Using database permissions is required.');
-    return [];
+    // Filter based on database permissions OR fallback to allowedRoles
+    return NAVIGATION_ITEMS.filter(item => {
+        // First try database permissions
+        if (canAccessComponentFn && canAccessComponentFn(item.view)) {
+            return true;
+        }
+        
+        // Fallback to hardcoded allowedRoles
+        if (item.allowedRoles && item.allowedRoles.includes(user.role)) {
+            // Check custom permission function if exists
+            if (item.customCheck && !item.customCheck(user)) {
+                return false;
+            }
+            return true;
+        }
+        
+        return false;
+    });
 };
 
 /**

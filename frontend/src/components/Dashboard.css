@@ -121,14 +121,16 @@
 .sidebar-footer {
     padding: 1rem;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: auto;
 }
 
-.nav-item.logout {
+.nav-item.logout-btn {
     color: #ff8a80;
+    width: 100%;
 }
 
-.nav-item.logout:hover {
-    background-color: rgba(255, 59, 48, 0.1);
+.nav-item.logout-btn:hover {
+    background-color: rgba(255, 59, 48, 0.2);
     color: #ff5252;
 }
 

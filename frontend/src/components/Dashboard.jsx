@@ -283,6 +283,13 @@ const Dashboard = ({ onLogout }) => {
               );
             })}
           </nav>
+
+          <div className="sidebar-footer">
+            <button className="nav-item logout-btn" onClick={onLogout}>
+              <LogOut size={20} />
+              {isSidebarOpen && <span>Logout</span>}
+            </button>
+          </div>
         </aside>
 
         {/* Main Content */}
