@@ -134,6 +134,7 @@ const PeerRating = () => {
                             </tr>
                         ) : (
                             employees.map((emp, index) => {
+                                if(emp.designation!="FACULTY_IN_CHARGE" && emp.designation!="Developer"){
                                 const totalScore = calculateTotalScore(emp);
 
                                 return (
@@ -168,6 +169,7 @@ const PeerRating = () => {
                                         <td className="total-score">{totalScore}</td>
                                     </tr>
                                 );
+                                }
                             })
                         )}
                     </tbody>
@@ -175,7 +177,7 @@ const PeerRating = () => {
             </div>
 
             <div className="rating-footer">
-                <div className="signature-section">
+                <div>
                     {/**/}
                 </div>
 
