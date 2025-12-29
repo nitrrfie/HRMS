@@ -33,8 +33,8 @@ const AttendanceRecord = () => {
                 });
                 if (today) {
                     setTodayAttendance(today);
-                    if (today.checkInTime) setCheckInTime(new Date(today.checkInTime));
-                    if (today.checkOutTime) setCheckOutTime(new Date(today.checkOutTime));
+                    if (today.checkIn?.time) setCheckInTime(new Date(today.checkIn.time));
+                    if (today.checkOut?.time) setCheckOutTime(new Date(today.checkOut.time));
                 }
             }
         } catch (error) {
@@ -87,7 +87,7 @@ const AttendanceRecord = () => {
             try {
                 const data = await attendanceAPI.checkIn('Office');
                 if (data.success) {
-                    setCheckInTime(new Date(data.attendance.checkInTime));
+                    setCheckInTime(new Date(data.attendance.checkIn.time));
                     setTodayAttendance(data.attendance);
                 } else {
                     alert(data.message || 'Failed to check in');
@@ -106,7 +106,7 @@ const AttendanceRecord = () => {
             try {
                 const data = await attendanceAPI.checkOut('');
                 if (data.success) {
-                    setCheckOutTime(new Date(data.attendance.checkOutTime));
+                    setCheckOutTime(new Date(data.attendance.checkOut.time));
                     setTodayAttendance(data.attendance);
                 } else {
                     alert(data.message || 'Failed to check out');

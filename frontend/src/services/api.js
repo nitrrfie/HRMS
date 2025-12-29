@@ -126,7 +126,7 @@ export const usersAPI = {
 
 export const attendanceAPI = {
     checkIn: async (location) => {
-        const response = await fetch(`${API_URL}/attendance/checkin`, {
+        const response = await fetch(`${API_URL}/attendance/check-in`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -138,7 +138,7 @@ export const attendanceAPI = {
     },
 
     checkOut: async (notes) => {
-        const response = await fetch(`${API_URL}/attendance/checkout`, {
+        const response = await fetch(`${API_URL}/attendance/check-out`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
