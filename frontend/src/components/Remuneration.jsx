@@ -247,7 +247,7 @@ const Remuneration = () => {
   const [employees, setEmployees] = useState([
     {
       id: 1,
-      employeeId: "NITR-CEO-001",
+      employeeId: "FIE/EM004",
       name: "Mr. Medha Singh",
       designation: "Chief Executive Officer",
       dateOfJoining: "15-07-2025",
@@ -270,7 +270,7 @@ const Remuneration = () => {
     },
     {
       id: 2,
-      employeeId: "NITR-MGR-001",
+      employeeId: "FIE/EM001",
       name: "Mr. Sunil Dewangan",
       designation: "Incubation Manager",
       dateOfJoining: "10/9/2025",
@@ -293,7 +293,7 @@ const Remuneration = () => {
     },
     {
       id: 3,
-      employeeId: "NITR-ACC-001",
+      employeeId: "FIE/ES001",
       name: "Mr. Ashok Sahu",
       designation: "Accountant Cum Administrator",
       dateOfJoining: "30/9/25",
@@ -316,7 +316,7 @@ const Remuneration = () => {
     },
     {
       id: 4,
-      employeeId: "EMP004",
+      employeeId: "FIE/ES002",
       name: "Mr. Himanshu Verma",
       designation: "Support Staff",
       dateOfJoining: "18/10/25",
@@ -339,7 +339,7 @@ const Remuneration = () => {
     },
     {
       id: 5,
-      employeeId: "EMP005",
+      employeeId: "FIE/ES003",
       name: "Mr. Naresh Kumar",
       designation: "Hardware Maintenance Engineer",
       dateOfJoining: "24/11/24",
