@@ -376,7 +376,7 @@ const Salary = () => {
 
         // Fetch attendance
         const attendanceResponse = await fetch(
-          `http://localhost:5000/api/attendance/user/${
+          `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/attendance/user/${
             selectedEmployee.id
           }?month=${currentMonth + 1}&year=${currentYear}`,
           {

@@ -340,7 +340,8 @@ router.post('/reset', protect, isAdmin, async (req, res) => {
         await RolePermission.deleteMany({});
         
         // Re-initialize
-        const initResponse = await fetch('http://localhost:5000/api/admin/initialize', {
+        const baseUrl = process.env.PORT ? `http://localhost:${process.env.PORT}` : 'http://localhost:5000';
+        const initResponse = await fetch(`${baseUrl}/api/admin/initialize`, {
             method: 'POST',
             headers: { 'Authorization': req.headers.authorization }
         });

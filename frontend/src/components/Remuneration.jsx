@@ -116,7 +116,7 @@ const Remuneration = () => {
         const attendancePromises = usersResponse.users.map(async (userData) => {
           try {
             const response = await fetch(
-              `http://localhost:5000/api/attendance/user/${userData._id
+              `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/attendance/user/${userData._id
               }?month=${currentDate.getMonth() + 1}&year=${currentYear}`,
               {
                 headers: {
