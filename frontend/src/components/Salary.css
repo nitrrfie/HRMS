@@ -8,9 +8,10 @@
 
 .salary-actions {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
     margin-bottom: 20px;
+    margin-right: 40px;
     gap: 20px;
     flex-wrap: wrap;
 }
@@ -114,7 +115,9 @@
 
 .action-buttons {
     display: flex;
-    gap: 12px;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-bottom: 1rem;
 }
 
 .action-btn {

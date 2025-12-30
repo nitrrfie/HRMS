@@ -184,6 +184,98 @@ const Remuneration = () => {
     }
   };
 
+  const fetchRemunerationData = async () => {
+    try {
+      // Fetch saved remuneration data from database
+      const response = await remunerationAPI.get(currentMonth, currentYear);
+      
+      console.log('Remuneration API Response:', response);
+      
+      if (response.success && response.records && response.records.length > 0) {
+        // Use the fetched data from records
+        console.log('Using saved remuneration data:', response.records);
+        
+        // Populate the attendance and leave data maps from saved records
+        const attendanceMap = {};
+        const casualLeaveMap = {};
+        const lwpMap = {};
+        
+        response.records.forEach(record => {
+          attendanceMap[record.employeeId] = record.daysWorked || 0;
+          casualLeaveMap[record.employeeId] = record.casualLeave || 0;
+          lwpMap[record.employeeId] = record.lwpDays || 0;
+        });
+        
+        // Update state with saved data
+        setAttendanceData(attendanceMap);
+        setCasualLeaveData(casualLeaveMap);
+        setLwpData(lwpMap);
+        setLoadingAttendance(false);
+        setLoadingLeaves(false);
+        
+        setEmployees(response.records.map(record => ({
+          id: record.id,
+          employeeId: record.employeeId,
+          name: record.name,
+          designation: record.designation,
+          dateOfJoining: record.dateOfJoining,
+          grossRemuneration: record.grossRemuneration || 0,
+          daysWorked: record.daysWorked || 0,
+          casualLeave: record.casualLeave || 0,
+          weeklyOff: record.weeklyOff || 0,
+          holidays: record.holidays || 0,
+          lwpDays: record.lwpDays || 0,
+          totalDays: record.totalDays || 0,
+          payableDays: record.payableDays || 0,
+          fixedRemuneration: record.fixedRemuneration || 0,
+          variableRemuneration: record.variableRemuneration || 0,
+          totalRemuneration: record.totalRemuneration || 0,
+          tds: record.tds || 0,
+          otherDeduction: record.otherDeduction || 0,
+          netPayable: record.netPayable || 0,
+          panBankDetails: record.panBankDetails || ''
+        })));
+      } else {
+        // No saved data, fetch users from database
+        console.log('No saved data, fetching users...');
+        const usersResponse = await usersAPI.getAll();
+        
+        if (usersResponse.success && usersResponse.users) {
+          const filteredUsers = usersResponse.users.filter(
+            user => user.role !== 'FACULTY_IN_CHARGE' && user.role !== 'OFFICER_IN_CHARGE'
+          );
+          
+          console.log('Filtered users:', filteredUsers.length);
+          
+          setEmployees(filteredUsers.map(user => ({
+            id: user._id,
+            employeeId: user.employeeId || user._id,
+            name: `${user.profile?.firstName || ''} ${user.profile?.lastName || ''}`.trim() || user.username,
+            designation: user.employment?.designation || user.role,
+            dateOfJoining: user.employment?.dateOfJoining || '',
+            grossRemuneration: user.employment?.grossRemuneration || 0,
+            daysWorked: 0,
+            casualLeave: 0,
+            weeklyOff: totalWeekendDays,
+            holidays: currentMonthHolidays,
+            lwpDays: 0,
+            totalDays: totalDaysInMonth,
+            payableDays: 0,
+            fixedRemuneration: (user.employment?.grossRemuneration || 0) * 0.8,
+            variableRemuneration: (user.employment?.grossRemuneration || 0) * 0.2,
+            totalRemuneration: user.employment?.grossRemuneration || 0,
+            tds: 0,
+            otherDeduction: 0,
+            netPayable: user.employment?.grossRemuneration || 0,
+            panBankDetails: ''
+          })));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch remuneration data:', error);
+    }
+  };
+
   const fetchAllEmployeesLeaves = async () => {
     setLoadingLeaves(true);
     try {
@@ -775,6 +867,8 @@ const Remuneration = () => {
           </div>
         </div>
       </div>
+
+      
     </div>
   );
 };
