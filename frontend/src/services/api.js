@@ -74,15 +74,15 @@ export const usersAPI = {
                 },
                 body: JSON.stringify({ profile: profileData })
             });
-            
+
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                return { 
-                    success: false, 
-                    message: errorData.message || `Server error: ${response.status}` 
+                return {
+                    success: false,
+                    message: errorData.message || `Server error: ${response.status}`
                 };
             }
-            
+
             return response.json();
         } catch (error) {
             console.error('updateMyProfile error:', error);
@@ -178,6 +178,25 @@ export const attendanceAPI = {
         const params = date ? `?date=${date}` : '';
         const response = await fetch(`${API_URL}/attendance${params}`, {
             headers: { ...getAuthHeader() }
+        });
+        return response.json();
+    },
+
+    getSubordinates: async () => {
+        const response = await fetch(`${API_URL}/attendance/subordinates/status`, {
+            headers: { ...getAuthHeader() }
+        });
+        return response.json();
+    },
+
+    markStatus: async (userId, status) => {
+        const response = await fetch(`${API_URL}/attendance/mark-status`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeader()
+            },
+            body: JSON.stringify({ userId, status })
         });
         return response.json();
     }

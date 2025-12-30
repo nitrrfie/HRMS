@@ -13,6 +13,8 @@ const AttendanceRecord = () => {
     const [attendanceHistory, setAttendanceHistory] = useState([]);
     const [loading, setLoading] = useState(false);
     const [todayAttendance, setTodayAttendance] = useState(null);
+    const [subordinates, setSubordinates] = useState([]);
+    const [subordinatesLoading, setSubordinatesLoading] = useState(false);
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -21,7 +23,10 @@ const AttendanceRecord = () => {
 
     useEffect(() => {
         fetchMyAttendance();
-    }, []);
+        if (user.role === 'OFFICER_IN_CHARGE') {
+            fetchSubordinates();
+        }
+    }, [user.role]);
 
     const fetchMyAttendance = async () => {
         try {
@@ -40,6 +45,38 @@ const AttendanceRecord = () => {
             }
         } catch (error) {
             console.error('Failed to fetch attendance:', error);
+        }
+    };
+
+    const fetchSubordinates = async () => {
+        setSubordinatesLoading(true);
+        try {
+            const data = await attendanceAPI.getSubordinates();
+            if (data.success) {
+                setSubordinates(data.subordinates || []);
+            }
+        } catch (error) {
+            console.error('Failed to fetch subordinates:', error);
+        } finally {
+            setSubordinatesLoading(false);
+        }
+    };
+
+    const handleMarkStatus = async (userId, status) => {
+        try {
+            const data = await attendanceAPI.markStatus(userId, status);
+            if (data.success) {
+                // Optimistically update UI
+                setSubordinates(prev => prev.map(sub =>
+                    sub.userId === userId ? { ...sub, status: status } : sub
+                ));
+                // alert(data.message);
+            } else {
+                alert(data.message || 'Failed to update status');
+            }
+        } catch (error) {
+            console.error('Error marking status:', error);
+            alert('Failed to update status');
         }
     };
 
@@ -69,7 +106,7 @@ const AttendanceRecord = () => {
     const today = currentTime.getDate();
     const totalWorkingDays = getWorkingDaysInMonth(year, month);
     const workingDaysPassed = getWorkingDaysPassed(year, month, today);
-    
+
     const daysPresent = attendanceHistory.filter(a => a.status === 'present').length + (checkInTime ? 1 : 0);
     const daysAbsent = workingDaysPassed - attendanceHistory.filter(a => a.status === 'present').length;
 
@@ -141,96 +178,142 @@ const AttendanceRecord = () => {
 
     return (
         <div className="attendance-page">
-            <div className="attendance-page-header">
-                <h2>Attendance</h2>
-                <p>Mark your daily attendance</p>
-            </div>
-
-            <div className="attendance-main">
-                <div className="clock-section">
-                    <div className="live-clock-display">
-                        <Clock size={32} />
-                        <span className="clock-time-large">{formatClockTime(currentTime)}</span>
+            {/* Personal Attendance - Hide for OFFICER_IN_CHARGE */}
+            {user.role !== 'OFFICER_IN_CHARGE' && (
+                <>
+                    <div className="attendance-page-header">
+                        <h2>Attendance</h2>
+                        <p>Mark your daily attendance</p>
                     </div>
-                    <div className="clock-date">
-                        {currentTime.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-                    </div>
-                    {currentTime.getHours() >= hours_attendance && !checkInTime && (
-                        <div className="late-warning">Check-in closed after {hours_attendance}:00 AM</div>
-                    )}
-                </div>
 
-                <div className="checkin-section">
-                    <div className="checkin-card">
-                        <div className="checkin-info">
-                            <LogIn size={24} />
-                            <div>
-                                <span className="checkin-label">Check In</span>
-                                <span className="checkin-time">{formatTime(checkInTime)}</span>
+                    <div className="attendance-main">
+                        <div className="clock-section">
+                            <div className="live-clock-display">
+                                <Clock size={32} />
+                                <span className="clock-time-large">{formatClockTime(currentTime)}</span>
+                            </div>
+                            <div className="clock-date">
+                                {currentTime.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                            </div>
+                            {currentTime.getHours() >= hours_attendance && !checkInTime && (
+                                <div className="late-warning">Check-in closed after {hours_attendance}:00 AM</div>
+                            )}
+                        </div>
+
+                        <div className="checkin-section">
+                            <div className="checkin-card">
+                                <div className="checkin-info">
+                                    <LogIn size={24} />
+                                    <div>
+                                        <span className="checkin-label">Check In</span>
+                                        <span className="checkin-time">{formatTime(checkInTime)}</span>
+                                    </div>
+                                </div>
+                                <button
+                                    className={`checkin-btn ${isCheckInDisabled() ? 'disabled' : ''}`}
+                                    onClick={handleCheckIn}
+                                    disabled={isCheckInDisabled()}
+                                >
+                                    {checkInTime ? 'Checked In' : 'Check In'}
+                                </button>
+                            </div>
+
+                            <div className="checkin-card">
+                                <div className="checkin-info">
+                                    <LogOut size={24} />
+                                    <div>
+                                        <span className="checkin-label">Check Out</span>
+                                        <span className="checkin-time">{formatTime(checkOutTime)}</span>
+                                    </div>
+                                </div>
+                                <button
+                                    className={`checkout-btn ${isCheckOutDisabled() ? 'disabled' : ''}`}
+                                    onClick={handleCheckOut}
+                                    disabled={isCheckOutDisabled()}
+                                >
+                                    {checkOutTime ? 'Checked Out' : 'Check Out'}
+                                </button>
+                            </div>
+
+                            {checkInTime && checkOutTime && (
+                                <div className="working-hours-display">
+                                    <span>Total Working Hours</span>
+                                    <strong>{getWorkingHours()}</strong>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="attendance-stats-section">
+                        <h3><Calendar size={20} /> {monthName} Summary</h3>
+                        <div className="stats-cards">
+                            <div className="att-stat-card total">
+                                <span className="att-stat-number">{totalWorkingDays}</span>
+                                <span className="att-stat-label">Total Working Days</span>
+                            </div>
+                            <div className="att-stat-card present">
+                                <CheckCircle size={20} />
+                                <span className="att-stat-number">{daysPresent}</span>
+                                <span className="att-stat-label">Days Present</span>
+                            </div>
+                            <div className="att-stat-card absent">
+                                <XCircle size={20} />
+                                <span className="att-stat-number">{daysAbsent < 0 ? 0 : daysAbsent}</span>
+                                <span className="att-stat-label">Days Absent</span>
                             </div>
                         </div>
-                        <button 
-                            className={`checkin-btn ${isCheckInDisabled() ? 'disabled' : ''}`}
-                            onClick={handleCheckIn}
-                            disabled={isCheckInDisabled()}
-                        >
-                            {checkInTime ? 'Checked In' : 'Check In'}
-                        </button>
                     </div>
 
-                    <div className="checkin-card">
-                        <div className="checkin-info">
-                            <LogOut size={24} />
-                            <div>
-                                <span className="checkin-label">Check Out</span>
-                                <span className="checkin-time">{formatTime(checkOutTime)}</span>
-                            </div>
+                    <div className="today-status-section">
+                        <h3>Today's Status</h3>
+                        <div className={`status-badge-large ${checkInTime ? (checkOutTime ? 'completed' : 'working') : (currentTime.getHours() >= hours_attendance ? 'absent' : 'pending')}`}>
+                            {checkInTime ? (checkOutTime ? 'Attendance Completed' : 'Currently Working') : (currentTime.getHours() >= hours_attendance ? 'Marked Absent' : 'Not Checked In Yet')}
                         </div>
-                        <button 
-                            className={`checkout-btn ${isCheckOutDisabled() ? 'disabled' : ''}`}
-                            onClick={handleCheckOut}
-                            disabled={isCheckOutDisabled()}
-                        >
-                            {checkOutTime ? 'Checked Out' : 'Check Out'}
-                        </button>
                     </div>
+                </>
+            )}
 
-                    {checkInTime && checkOutTime && (
-                        <div className="working-hours-display">
-                            <span>Total Working Hours</span>
-                            <strong>{getWorkingHours()}</strong>
+            {
+                user.role === 'OFFICER_IN_CHARGE' && subordinates.length > 0 && (
+                    <div className="subordinates-section">
+                        <h3>Team Attendance</h3>
+                        <div className="subordinates-list">
+                            {subordinates.map(sub => (
+                                <div key={sub.userId} className="subordinate-card">
+                                    <div className="sub-info">
+                                        <span className="sub-name">{sub.name}</span>
+                                        <span className="sub-role">{sub.designation || 'Employee'}</span>
+                                        <span className={`sub-status status-${sub.status}`}>
+                                            {sub.status.replace('-', ' ').toUpperCase()}
+                                        </span>
+                                    </div>
+                                    <div className="sub-actions">
+                                        <button
+                                            className={`action-btn btn-present ${sub.status === 'present' ? 'active' : ''}`}
+                                            onClick={() => handleMarkStatus(sub.userId, 'present')}
+                                        >
+                                            P
+                                        </button>
+                                        <button
+                                            className={`action-btn btn-absent ${sub.status === 'absent' ? 'active' : ''}`}
+                                            onClick={() => handleMarkStatus(sub.userId, 'absent')}
+                                        >
+                                            A
+                                        </button>
+                                        <button
+                                            className={`action-btn btn-halfday ${sub.status === 'half-day' ? 'active' : ''}`}
+                                            onClick={() => handleMarkStatus(sub.userId, 'half-day')}
+                                        >
+                                            HD
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
-                    )}
-                </div>
-            </div>
-
-            <div className="attendance-stats-section">
-                <h3><Calendar size={20} /> {monthName} Summary</h3>
-                <div className="stats-cards">
-                    <div className="att-stat-card total">
-                        <span className="att-stat-number">{totalWorkingDays}</span>
-                        <span className="att-stat-label">Total Working Days</span>
                     </div>
-                    <div className="att-stat-card present">
-                        <CheckCircle size={20} />
-                        <span className="att-stat-number">{daysPresent}</span>
-                        <span className="att-stat-label">Days Present</span>
-                    </div>
-                    <div className="att-stat-card absent">
-                        <XCircle size={20} />
-                        <span className="att-stat-number">{daysAbsent < 0 ? 0 : daysAbsent}</span>
-                        <span className="att-stat-label">Days Absent</span>
-                    </div>
-                </div>
-            </div>
-
-            <div className="today-status-section">
-                <h3>Today's Status</h3>
-                <div className={`status-badge-large ${checkInTime ? (checkOutTime ? 'completed' : 'working') : (currentTime.getHours() >= hours_attendance ? 'absent' : 'pending')}`}>
-                    {checkInTime ? (checkOutTime ? 'Attendance Completed' : 'Currently Working') : (currentTime.getHours() >= hours_attendance ? 'Marked Absent' : 'Not Checked In Yet')}
-                </div>
-            </div>
-        </div>
+                )
+            }
+        </div >
     );
 };
 

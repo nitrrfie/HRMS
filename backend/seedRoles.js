@@ -47,9 +47,74 @@ const roleDefinitions = [
         ]
     },
     {
+        roleId: 'OFFICER_IN_CHARGE',
+        displayName: 'Officer in Charge',
+        hierarchyLevel: 1,
+        description: 'Operations officer with manager-level permissions',
+        isSystemRole: true,
+        isActive: true,
+        componentAccess: [
+            { componentId: 'dashboard', componentName: 'Dashboard', hasAccess: true },
+            { componentId: 'employees', componentName: 'Employee Management', hasAccess: true },
+            { componentId: 'attendance', componentName: 'Attendance', hasAccess: true },
+            { componentId: 'leave', componentName: 'Leave Management', hasAccess: true },
+            { componentId: 'salary', componentName: 'Salary', hasAccess: false },
+            { componentId: 'peer-rating', componentName: 'Peer Rating', hasAccess: true },
+            { componentId: 'variable-remuneration', componentName: 'Variable Remuneration', hasAccess: false },
+            { componentId: 'remuneration', componentName: 'Remuneration', hasAccess: true },
+            { componentId: 'calendar', componentName: 'Calendar', hasAccess: true },
+            { componentId: 'efiling', componentName: 'E-Filing', hasAccess: true },
+            { componentId: 'settings', componentName: 'Settings', hasAccess: true },
+            { componentId: 'profile', componentName: 'Profile', hasAccess: true },
+            { componentId: 'admin', componentName: 'Admin Panel', hasAccess: false }
+        ],
+        featureAccess: [
+            { featureId: 'employee.edit', featureName: 'Edit Employee', hasAccess: true },
+            { featureId: 'employee.viewAll', featureName: 'View All Employees', hasAccess: true },
+            { featureId: 'leave.approve', featureName: 'Approve Leave', hasAccess: true },
+            { featureId: 'leave.apply', featureName: 'Apply Leave', hasAccess: true },
+            { featureId: 'attendance.mark', featureName: 'Mark Attendance', hasAccess: true },
+            { featureId: 'attendance.viewReports', featureName: 'View Attendance Reports', hasAccess: true },
+            { featureId: 'remuneration.view', featureName: 'View Remuneration', hasAccess: true }
+        ]
+    },
+    {
+        roleId: 'FACULTY_IN_CHARGE',
+        displayName: 'Faculty in Charge',
+        hierarchyLevel: 1,
+        description: 'Faculty member with access to variable remuneration management',
+        isSystemRole: true,
+        isActive: true,
+        componentAccess: [
+            { componentId: 'dashboard', componentName: 'Dashboard', hasAccess: true },
+            { componentId: 'employees', componentName: 'Employee Management', hasAccess: true },
+            { componentId: 'attendance', componentName: 'Attendance', hasAccess: true },
+            { componentId: 'leave', componentName: 'Leave Management', hasAccess: true },
+            { componentId: 'salary', componentName: 'Salary', hasAccess: false },
+            { componentId: 'peer-rating', componentName: 'Peer Rating', hasAccess: false },
+            { componentId: 'variable-remuneration', componentName: 'Variable Remuneration', hasAccess: true },
+            { componentId: 'remuneration', componentName: 'Remuneration', hasAccess: true },
+            { componentId: 'calendar', componentName: 'Calendar', hasAccess: true },
+            { componentId: 'efiling', componentName: 'E-Filing', hasAccess: true },
+            { componentId: 'settings', componentName: 'Settings', hasAccess: true },
+            { componentId: 'profile', componentName: 'Profile', hasAccess: true },
+            { componentId: 'admin', componentName: 'Admin Panel', hasAccess: false }
+        ],
+        featureAccess: [
+            { featureId: 'employee.edit', featureName: 'Edit Employee', hasAccess: true },
+            { featureId: 'employee.viewAll', featureName: 'View All Employees', hasAccess: true },
+            { featureId: 'leave.approve', featureName: 'Approve Leave', hasAccess: true },
+            { featureId: 'leave.apply', featureName: 'Apply Leave', hasAccess: true },
+            { featureId: 'attendance.mark', featureName: 'Mark Attendance', hasAccess: true },
+            { featureId: 'attendance.viewReports', featureName: 'View Attendance Reports', hasAccess: true },
+            { featureId: 'remuneration.view', featureName: 'View Remuneration', hasAccess: true },
+            { featureId: 'remuneration.variable', featureName: 'Manage Variable Remuneration', hasAccess: true }
+        ]
+    },
+    {
         roleId: 'CEO',
         displayName: 'CEO',
-        hierarchyLevel: 1,
+        hierarchyLevel: 2,
         description: 'Chief Executive Officer with high-level management access',
         isSystemRole: true,
         isActive: true,
@@ -83,7 +148,7 @@ const roleDefinitions = [
     {
         roleId: 'INCUBATION_MANAGER',
         displayName: 'Incubation Manager',
-        hierarchyLevel: 2,
+        hierarchyLevel: 3,
         description: 'Manages incubation operations and has manager-level access',
         isSystemRole: true,
         isActive: true,
@@ -115,7 +180,7 @@ const roleDefinitions = [
     {
         roleId: 'ACCOUNTANT',
         displayName: 'Accountant',
-        hierarchyLevel: 2,
+        hierarchyLevel: 3,
         description: 'Manages financial records including salary and remuneration',
         isSystemRole: true,
         isActive: true,
@@ -147,74 +212,9 @@ const roleDefinitions = [
         ]
     },
     {
-        roleId: 'OFFICER_IN_CHARGE',
-        displayName: 'Officer in Charge',
-        hierarchyLevel: 2,
-        description: 'Operations officer with manager-level permissions',
-        isSystemRole: true,
-        isActive: true,
-        componentAccess: [
-            { componentId: 'dashboard', componentName: 'Dashboard', hasAccess: true },
-            { componentId: 'employees', componentName: 'Employee Management', hasAccess: true },
-            { componentId: 'attendance', componentName: 'Attendance', hasAccess: true },
-            { componentId: 'leave', componentName: 'Leave Management', hasAccess: true },
-            { componentId: 'salary', componentName: 'Salary', hasAccess: false },
-            { componentId: 'peer-rating', componentName: 'Peer Rating', hasAccess: true },
-            { componentId: 'variable-remuneration', componentName: 'Variable Remuneration', hasAccess: false },
-            { componentId: 'remuneration', componentName: 'Remuneration', hasAccess: true },
-            { componentId: 'calendar', componentName: 'Calendar', hasAccess: true },
-            { componentId: 'efiling', componentName: 'E-Filing', hasAccess: true },
-            { componentId: 'settings', componentName: 'Settings', hasAccess: true },
-            { componentId: 'profile', componentName: 'Profile', hasAccess: true },
-            { componentId: 'admin', componentName: 'Admin Panel', hasAccess: false }
-        ],
-        featureAccess: [
-            { featureId: 'employee.edit', featureName: 'Edit Employee', hasAccess: true },
-            { featureId: 'employee.viewAll', featureName: 'View All Employees', hasAccess: true },
-            { featureId: 'leave.approve', featureName: 'Approve Leave', hasAccess: true },
-            { featureId: 'leave.apply', featureName: 'Apply Leave', hasAccess: true },
-            { featureId: 'attendance.mark', featureName: 'Mark Attendance', hasAccess: true },
-            { featureId: 'attendance.viewReports', featureName: 'View Attendance Reports', hasAccess: true },
-            { featureId: 'remuneration.view', featureName: 'View Remuneration', hasAccess: true }
-        ]
-    },
-    {
-        roleId: 'FACULTY_IN_CHARGE',
-        displayName: 'Faculty in Charge',
-        hierarchyLevel: 2,
-        description: 'Faculty member with access to variable remuneration management',
-        isSystemRole: true,
-        isActive: true,
-        componentAccess: [
-            { componentId: 'dashboard', componentName: 'Dashboard', hasAccess: true },
-            { componentId: 'employees', componentName: 'Employee Management', hasAccess: true },
-            { componentId: 'attendance', componentName: 'Attendance', hasAccess: true },
-            { componentId: 'leave', componentName: 'Leave Management', hasAccess: true },
-            { componentId: 'salary', componentName: 'Salary', hasAccess: false },
-            { componentId: 'peer-rating', componentName: 'Peer Rating', hasAccess: false },
-            { componentId: 'variable-remuneration', componentName: 'Variable Remuneration', hasAccess: true },
-            { componentId: 'remuneration', componentName: 'Remuneration', hasAccess: true },
-            { componentId: 'calendar', componentName: 'Calendar', hasAccess: true },
-            { componentId: 'efiling', componentName: 'E-Filing', hasAccess: true },
-            { componentId: 'settings', componentName: 'Settings', hasAccess: true },
-            { componentId: 'profile', componentName: 'Profile', hasAccess: true },
-            { componentId: 'admin', componentName: 'Admin Panel', hasAccess: false }
-        ],
-        featureAccess: [
-            { featureId: 'employee.edit', featureName: 'Edit Employee', hasAccess: true },
-            { featureId: 'employee.viewAll', featureName: 'View All Employees', hasAccess: true },
-            { featureId: 'leave.approve', featureName: 'Approve Leave', hasAccess: true },
-            { featureId: 'leave.apply', featureName: 'Apply Leave', hasAccess: true },
-            { featureId: 'attendance.mark', featureName: 'Mark Attendance', hasAccess: true },
-            { featureId: 'attendance.viewReports', featureName: 'View Attendance Reports', hasAccess: true },
-            { featureId: 'remuneration.view', featureName: 'View Remuneration', hasAccess: true },
-            { featureId: 'remuneration.variable', featureName: 'Manage Variable Remuneration', hasAccess: true }
-        ]
-    },
-    {
         roleId: 'EMPLOYEE',
         displayName: 'Employee',
-        hierarchyLevel: 3,
+        hierarchyLevel: 4,
         description: 'Regular employee with basic access to view own information',
         isSystemRole: true,
         isActive: true,
@@ -243,19 +243,19 @@ const roleDefinitions = [
 const seedRoles = async () => {
     try {
         await connectDB();
-        
+
         console.log('🌱 Starting role seeding...\n');
-        
+
         // Clear existing role permissions (optional)
         const deleteResult = await RolePermission.deleteMany({});
         console.log(`🗑️  Cleared ${deleteResult.deletedCount} existing roles\n`);
-        
+
         let created = 0;
         let updated = 0;
-        
+
         for (const roleDef of roleDefinitions) {
             const existing = await RolePermission.findOne({ roleId: roleDef.roleId });
-            
+
             if (existing) {
                 await RolePermission.findOneAndUpdate(
                     { roleId: roleDef.roleId },
@@ -270,14 +270,14 @@ const seedRoles = async () => {
                 created++;
             }
         }
-        
+
         console.log('\n📊 Seeding Summary:');
         console.log(`   Created: ${created} roles`);
         console.log(`   Updated: ${updated} roles`);
         console.log(`   Total: ${roleDefinitions.length} roles\n`);
-        
+
         console.log('✨ Role seeding completed successfully!');
-        
+
         process.exit(0);
     } catch (error) {
         console.error('❌ Error seeding roles:', error);

@@ -77,7 +77,8 @@ const UserSchema = new mongoose.Schema({
     leaveBalance: {
         casualLeave: { type: Number, default: 12 },
         onDutyLeave: { type: Number, default: 10 },
-        leaveWithoutPay: { type: Number, default: 0 }
+        leaveWithoutPay: { type: Number, default: 0 },
+        casualLeaveAvailed: { type: Number, default: 0 }
     },
     isActive: {
         type: Boolean,
@@ -85,7 +86,7 @@ const UserSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-UserSchema.pre('save', async function(next) {
+UserSchema.pre('save', async function (next) {
     try {
         if (!this.isModified('password')) return next();
         const salt = await bcrypt.genSalt(10);
@@ -96,7 +97,7 @@ UserSchema.pre('save', async function(next) {
     }
 });
 
-UserSchema.methods.matchPassword = async function(enteredPassword) {
+UserSchema.methods.matchPassword = async function (enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password);
 };
 

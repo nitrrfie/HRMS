@@ -100,7 +100,7 @@ router.get("/my", protect, async (req, res) => {
   }
 });
 
-router.get("/all", protect, isAdminOrCEO, async (req, res) => {
+router.get("/all", protect, async (req, res) => {
   try {
     const { status } = req.query;
 
