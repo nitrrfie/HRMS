@@ -468,9 +468,8 @@ const Salary = () => {
     <div className="salary-page-container">
       {canViewAllSalaries && (
         <div className="salary-actions">
-          \n{" "}
           <div className="employee-selector">
-            \n <label>Enter Employee Name:</label>
+            <label>Enter Employee Name:</label>
             <div className="search-input-wrapper">
               <input
                 type="text"
@@ -767,12 +766,7 @@ const Salary = () => {
 
           <div className="signature-section">
             <div className="signature-block">
-              <p className="signature-title">Accountant cum Admin.</p>
-              <p className="signature-org">NITRRFIE</p>
-            </div>
-            <div className="signature-block">
-              <p className="signature-title">Chief Executive Officer</p>
-              <p className="signature-org">NITRRFIE</p>
+              <p className="signature-title">This is a Computer Generated Salary Slip. Does not Require any Signature.</p>
             </div>
           </div>
         </div>
