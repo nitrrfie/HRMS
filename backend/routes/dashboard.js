@@ -5,11 +5,24 @@ const Attendance = require("../models/Attendance");
 const Leave = require("../models/Leave");
 const { protect, isManagement } = require("../middleware/auth");
 
-router.get("/", protect, isManagement, async (req, res) => {
+router.get("/", protect, async (req, res) => {
   try {
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
 
+    // Check if user is management
+    const managementRoles = [
+      'ADMIN',
+      'CEO',
+      'FACULTY_IN_CHARGE',
+      'OFFICER_IN_CHARGE',
+      'INCUBATION_MANAGER',
+      'ACCOUNTANT'
+    ];
+    const isUserManagement = managementRoles.includes(req.user.role);
+
+    // For management: show all employees and full statistics
+    // For regular employees: show limited stats (total employees and present today)
     const totalEmployees = await User.countDocuments({
       role: { $nin: ["FACULTY_IN_CHARGE", "ADMIN", "OFFICER_IN_CHARGE"] },
     });
@@ -27,79 +40,93 @@ router.get("/", protect, isManagement, async (req, res) => {
 
     const pendingLeaves = await Leave.countDocuments({ status: "pending" });
 
-    const attendanceWithUsers = await Attendance.find({ date: today })
-      .populate(
-        "user",
-        "username profile.firstName profile.lastName employment.designation role"
-      )
-      .sort({ checkInTime: -1 });
+    // Only show detailed attendance list to management
+    let employeeAttendance = [];
+    if (isUserManagement) {
+      const attendanceWithUsers = await Attendance.find({ date: today })
+        .populate(
+          "user",
+          "username profile.firstName profile.lastName employment.designation role"
+        )
+        .sort({ checkInTime: -1 });
 
-    const employeeAttendance = attendanceWithUsers.map((att) => ({
-      name: att.user?.profile?.firstName
-        ? `${att.user.profile.firstName} ${att.user.profile.lastName || ""}`
-        : att.user?.username || "Unknown",
-      role: att.user?.employment?.designation || att.user?.role || "Employee",
-      status: att.status,
-      checkIn: att.checkInTime
-        ? new Date(att.checkInTime).toLocaleTimeString("en-IN", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true,
-          })
-        : "-",
-    }));
+      employeeAttendance = attendanceWithUsers.map((att) => ({
+        name: att.user?.profile?.firstName
+          ? `${att.user.profile.firstName} ${att.user.profile.lastName || ""}`
+          : att.user?.username || "Unknown",
+        role: att.user?.employment?.designation || att.user?.role || "Employee",
+        status: att.status,
+        checkIn: att.checkInTime
+          ? new Date(att.checkInTime).toLocaleTimeString("en-IN", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            })
+          : "-",
+      }));
+    }
 
-    const recentLeaves = await Leave.find()
-      .populate("user", "username profile.firstName profile.lastName")
-      .populate("reviewedBy", "username profile.firstName profile.lastName")
-      .sort({ updatedAt: -1 })
-      .limit(5);
-
+    // Activities for management only
     const activities = [];
+    if (isUserManagement) {
+      const attendanceWithUsers = await Attendance.find({ date: today })
+        .populate(
+          "user",
+          "username profile.firstName profile.lastName"
+        )
+        .sort({ checkInTime: -1 })
+        .limit(3);
 
-    for (const att of attendanceWithUsers.slice(0, 3)) {
-      const name = att.user?.profile?.firstName
-        ? `${att.user.profile.firstName} ${att.user.profile.lastName || ""}`
-        : att.user?.username;
-      if (att.checkInTime) {
-        const timeDiff = Math.floor(
-          (new Date() - new Date(att.checkInTime)) / 60000
-        );
-        activities.push({
-          text: `${name} marked attendance`,
-          time:
-            timeDiff < 60
-              ? `${timeDiff} mins ago`
-              : `${Math.floor(timeDiff / 60)} hours ago`,
-          type: "attendance",
-        });
+      for (const att of attendanceWithUsers) {
+        const name = att.user?.profile?.firstName
+          ? `${att.user.profile.firstName} ${att.user.profile.lastName || ""}`
+          : att.user?.username;
+        if (att.checkInTime) {
+          const timeDiff = Math.floor(
+            (new Date() - new Date(att.checkInTime)) / 60000
+          );
+          activities.push({
+            text: `${name} marked attendance`,
+            time:
+              timeDiff < 60
+                ? `${timeDiff} mins ago`
+                : `${Math.floor(timeDiff / 60)} hours ago`,
+            type: "attendance",
+          });
+        }
       }
-    }
 
-    for (const leave of recentLeaves) {
-      const name = leave.user?.profile?.firstName
-        ? `${leave.user.profile.firstName} ${leave.user.profile.lastName || ""}`
-        : leave.user?.username;
-      if (leave.status === "approved") {
-        activities.push({
-          text: `Leave approved for ${name}`,
-          time: getTimeAgo(leave.reviewedOn),
-          type: "approve",
-        });
-      } else if (leave.status === "pending") {
-        activities.push({
-          text: `${name} applied for leave`,
-          time: getTimeAgo(leave.appliedOn),
-          type: "leave",
-        });
+      const recentLeaves = await Leave.find()
+        .populate("user", "username profile.firstName profile.lastName")
+        .populate("reviewedBy", "username profile.firstName profile.lastName")
+        .sort({ updatedAt: -1 })
+        .limit(5);
+
+      for (const leave of recentLeaves) {
+        const name = leave.user?.profile?.firstName
+          ? `${leave.user.profile.firstName} ${leave.user.profile.lastName || ""}`
+          : leave.user?.username;
+        if (leave.status === "approved") {
+          activities.push({
+            text: `Leave approved for ${name}`,
+            time: getTimeAgo(leave.reviewedOn),
+            type: "approve",
+          });
+        } else if (leave.status === "pending") {
+          activities.push({
+            text: `${name} applied for leave`,
+            time: getTimeAgo(leave.appliedOn),
+            type: "leave",
+          });
+        }
       }
-    }
 
-    activities.sort((a, b) => {
-      const timeA = parseTimeAgo(a.time);
-      const timeB = parseTimeAgo(b.time);
-      return timeA - timeB;
-    });
+      activities.sort((a, b) => {
+        const timeA = parseTimeAgo(a.time);
+        const timeB = parseTimeAgo(b.time);
+        return timeA - timeB;
+      });
+    }
 
     res.json({
       success: true,
@@ -110,7 +137,7 @@ router.get("/", protect, isManagement, async (req, res) => {
         pendingLeaves,
       },
       employeeAttendance,
-      activities: activities.slice(0, 5),
+      activities: isUserManagement ? activities.slice(0, 5) : [],
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
