@@ -300,12 +300,12 @@ router.get('/user/:userId', protect, async (req, res) => {
         let startDate, endDate;
 
         if (month && year) {
-            startDate = new Date(year, month - 1, 1);
-            endDate = new Date(year, month, 0);
+            startDate = new Date(Date.UTC(year, month - 1, 1));
+            endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
         } else {
             const now = new Date();
-            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-            endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            startDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+            endDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
         }
 
         const attendance = await Attendance.aggregate([

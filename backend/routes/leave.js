@@ -79,8 +79,8 @@ router.get("/my", protect, async (req, res) => {
 
     if (status) query.status = status;
     if (year) {
-      const startOfYear = new Date(year, 0, 1);
-      const endOfYear = new Date(year, 11, 31);
+      const startOfYear = new Date(Date.UTC(year, 0, 1));
+      const endOfYear = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999));
       query.startDate = { $gte: startOfYear, $lte: endOfYear };
     }
 
@@ -177,9 +177,9 @@ router.put("/:id/approve", protect, async (req, res) => {
     let casualRemainingAfterApproval = user?.leaveBalance?.casualLeave ?? 0;
 
     if (leave.leaveType === "Casual Leave") {
-      const year = new Date(leave.startDate).getFullYear();
-      const startOfYear = new Date(year, 0, 1);
-      const endOfYear = new Date(year, 11, 31, 23, 59, 59, 999);
+      const year = new Date(leave.startDate).getUTCFullYear();
+      const startOfYear = new Date(Date.UTC(year, 0, 1));
+      const endOfYear = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999));
 
       const approvedSoFarAgg = await Leave.aggregate([
         {

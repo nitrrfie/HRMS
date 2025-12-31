@@ -27,7 +27,7 @@ const NATIONAL_HOLIDAYS = {
 
 // Helper: Get number of days in a month
 const getDaysInMonth = (year, month) => {
-    return new Date(year, month, 0).getDate();
+    return new Date(Date.UTC(year, month, 0)).getUTCDate();
 };
 
 // Helper: Count weekends (Sat + Sun) in a month from a start date
@@ -35,8 +35,8 @@ const countWeekends = (year, month, startDay = 1) => {
     const daysInMonth = getDaysInMonth(year, month);
     let count = 0;
     for (let day = startDay; day <= daysInMonth; day++) {
-        const date = new Date(year, month - 1, day);
-        const dayOfWeek = date.getDay();
+        const date = new Date(Date.UTC(year, month - 1, day));
+        const dayOfWeek = date.getUTCDay();
         if (dayOfWeek === 0 || dayOfWeek === 6) count++;
     }
     return count;
@@ -48,11 +48,11 @@ const countHolidays = (year, month, startDay = 1) => {
     let count = 0;
     holidays.forEach(h => {
         const hDate = new Date(h.date);
-        if (hDate.getFullYear() === year &&
-            (hDate.getMonth() + 1) === month &&
-            hDate.getDate() >= startDay) {
+        if (hDate.getUTCFullYear() === year &&
+            (hDate.getUTCMonth() + 1) === month &&
+            hDate.getUTCDate() >= startDay) {
             // Check if holiday falls on a weekend (don't double count)
-            const dayOfWeek = hDate.getDay();
+            const dayOfWeek = hDate.getUTCDay();
             if (dayOfWeek !== 0 && dayOfWeek !== 6) {
                 count++;
             }
@@ -77,7 +77,7 @@ router.get('/attendance-summary', protect, isManagement, async (req, res) => {
 
         // Check if it's the current month - if so, return empty
         const now = new Date();
-        if (yearNum === now.getFullYear() && monthNum === (now.getMonth() + 1)) {
+        if (yearNum === now.getUTCFullYear() && monthNum === (now.getUTCMonth() + 1)) {
             return res.json({
                 success: true,
                 isCurrentMonth: true,
@@ -92,9 +92,9 @@ router.get('/attendance-summary', protect, isManagement, async (req, res) => {
             isActive: true
         }).select('username profile employment role');
 
-        const startDate = new Date(yearNum, monthNum - 1, 1);
-        const endDate = new Date(yearNum, monthNum, 0);
-        const daysInMonth = endDate.getDate();
+        const startDate = new Date(Date.UTC(yearNum, monthNum - 1, 1));
+        const endDate = new Date(Date.UTC(yearNum, monthNum, 0, 23, 59, 59, 999));
+        const daysInMonth = new Date(Date.UTC(yearNum, monthNum, 0)).getUTCDate();
 
         // Fetch attendance for all employees for the month
         const allAttendance = await Attendance.find({
@@ -110,9 +110,9 @@ router.get('/attendance-summary', protect, isManagement, async (req, res) => {
 
             // Calculate start day for this employee (1 if joined before this month)
             let effectiveStartDay = 1;
-            if (joiningDate && joiningDate.getFullYear() === yearNum &&
-                (joiningDate.getMonth() + 1) === monthNum) {
-                effectiveStartDay = joiningDate.getDate();
+            if (joiningDate && joiningDate.getUTCFullYear() === yearNum &&
+                (joiningDate.getUTCMonth() + 1) === monthNum) {
+                effectiveStartDay = joiningDate.getUTCDate();
             } else if (joiningDate && joiningDate > endDate) {
                 // Joined after this month - no data
                 return {
