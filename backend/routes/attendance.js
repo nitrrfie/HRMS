@@ -3,10 +3,21 @@ const router = express.Router();
 const mongoose = require("mongoose");
 const Attendance = require("../models/Attendance");
 const User = require("../models/User");
+const RolePermission = require("../models/RolePermission");
 const { protect, isAdminOrCEO } = require("../middleware/auth");
 
 router.post("/check-in", protect, async (req, res) => {
   try {
+    // Check if user has permission to mark attendance
+    const userRole = await RolePermission.findOne({ roleId: req.user.role });
+    const hasMarkPermission = userRole?.featureAccess?.some(
+      feature => feature.featureId === 'attendance.mark' && feature.hasAccess
+    ) || false;
+
+    if (!hasMarkPermission) {
+      return res.status(403).json({ message: 'You do not have permission to mark attendance' });
+    }
+
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
 
@@ -69,6 +80,16 @@ router.post("/check-in", protect, async (req, res) => {
 
 router.post("/check-out", protect, async (req, res) => {
   try {
+    // Check if user has permission to mark attendance
+    const userRole = await RolePermission.findOne({ roleId: req.user.role });
+    const hasMarkPermission = userRole?.featureAccess?.some(
+      feature => feature.featureId === 'attendance.mark' && feature.hasAccess
+    ) || false;
+
+    if (!hasMarkPermission) {
+      return res.status(403).json({ message: 'You do not have permission to mark attendance' });
+    }
+
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
 

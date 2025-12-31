@@ -13,7 +13,7 @@ import "./AttendanceRecord.css";
 import { hours_attendance, minutes_attendance } from "../services/attendance";
 
 const AttendanceRecord = () => {
-  const { user } = useAuth();
+  const { user, canAccessFeature } = useAuth();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [checkInTime, setCheckInTime] = useState(null);
   const [checkOutTime, setCheckOutTime] = useState(null);
@@ -271,8 +271,8 @@ const AttendanceRecord = () => {
 
   return (
     <div className="attendance-page">
-      {/* Personal Attendance - Hide for OFFICER_IN_CHARGE */}
-      {user.role !== "OFFICER_IN_CHARGE" && (
+      {/* Personal Attendance - Hide for OFFICER_IN_CHARGE or users without mark permission */}
+      {user.role !== "OFFICER_IN_CHARGE" && canAccessFeature('attendance.mark') && (
         <>
           <div className="attendance-page-header">
             <h2>Attendance</h2>
@@ -455,6 +455,16 @@ const AttendanceRecord = () => {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Message for users without mark attendance permission */}
+      {user.role !== "OFFICER_IN_CHARGE" && !canAccessFeature('attendance.mark') && (
+        <div className="attendance-page-header">
+          <h2>Attendance</h2>
+          <p style={{ color: '#f59e0b', marginTop: '20px', fontSize: '16px' }}>
+            You do not have permission to mark attendance. Please contact your administrator.
+          </p>
         </div>
       )}
     </div>

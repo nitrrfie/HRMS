@@ -3,12 +3,19 @@ const router = express.Router();
 const User = require("../models/User");
 const Attendance = require("../models/Attendance");
 const Leave = require("../models/Leave");
+const RolePermission = require("../models/RolePermission");
 const { protect, isManagement } = require("../middleware/auth");
 
 router.get("/", protect, async (req, res) => {
   try {
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
+
+    // Check if user has permission to view attendance reports
+    const userRole = await RolePermission.findOne({ roleId: req.user.role });
+    const hasViewReportsPermission = userRole?.featureAccess?.some(
+      feature => feature.featureId === 'attendance.viewReports' && feature.hasAccess
+    ) || false;
 
     // Check if user is management
     const managementRoles = [
@@ -40,9 +47,9 @@ router.get("/", protect, async (req, res) => {
 
     const pendingLeaves = await Leave.countDocuments({ status: "pending" });
 
-    // Only show detailed attendance list to management
+    // Only show detailed attendance list if user has viewReports permission
     let employeeAttendance = [];
-    if (isUserManagement) {
+    if (isUserManagement && hasViewReportsPermission) {
       const attendanceWithUsers = await Attendance.find({ date: today })
         .populate(
           "user",
@@ -66,33 +73,36 @@ router.get("/", protect, async (req, res) => {
       }));
     }
 
-    // Activities for management only
+    // Activities - only show attendance-related activities if user has viewReports permission
     const activities = [];
     if (isUserManagement) {
-      const attendanceWithUsers = await Attendance.find({ date: today })
-        .populate(
-          "user",
-          "username profile.firstName profile.lastName"
-        )
-        .sort({ checkInTime: -1 })
-        .limit(3);
+      // Only add attendance activities if user has viewReports permission
+      if (hasViewReportsPermission) {
+        const attendanceWithUsers = await Attendance.find({ date: today })
+          .populate(
+            "user",
+            "username profile.firstName profile.lastName"
+          )
+          .sort({ checkInTime: -1 })
+          .limit(3);
 
-      for (const att of attendanceWithUsers) {
-        const name = att.user?.profile?.firstName
-          ? `${att.user.profile.firstName} ${att.user.profile.lastName || ""}`
-          : att.user?.username;
-        if (att.checkInTime) {
-          const timeDiff = Math.floor(
-            (new Date() - new Date(att.checkInTime)) / 60000
-          );
-          activities.push({
-            text: `${name} marked attendance`,
-            time:
-              timeDiff < 60
-                ? `${timeDiff} mins ago`
-                : `${Math.floor(timeDiff / 60)} hours ago`,
-            type: "attendance",
-          });
+        for (const att of attendanceWithUsers) {
+          const name = att.user?.profile?.firstName
+            ? `${att.user.profile.firstName} ${att.user.profile.lastName || ""}`
+            : att.user?.username;
+          if (att.checkInTime) {
+            const timeDiff = Math.floor(
+              (new Date() - new Date(att.checkInTime)) / 60000
+            );
+            activities.push({
+              text: `${name} marked attendance`,
+              time:
+                timeDiff < 60
+                  ? `${timeDiff} mins ago`
+                  : `${Math.floor(timeDiff / 60)} hours ago`,
+              type: "attendance",
+            });
+          }
         }
       }
 

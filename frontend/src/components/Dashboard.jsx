@@ -32,7 +32,7 @@ import "./Dashboard.css";
 import Calendar from "./Calendar";
 
 const Dashboard = ({ onLogout }) => {
-  const { user, isAdmin, getRoleHierarchyLevel, canAccessComponent } =
+  const { user, isAdmin, getRoleHierarchyLevel, canAccessComponent, canAccessFeature } =
     useAuth();
   const [activeView, setActiveView] = useState("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -201,32 +201,34 @@ const Dashboard = ({ onLogout }) => {
       </div>
 
       <div className="ceo-main-grid">
-        <div className="ceo-attendance-section">
-          <div className="section-header">
-            <h2>Attendance Overview</h2>
-            <span className="section-subtitle">Level 2 & 3 Employees</span>
+        {canAccessFeature('attendance.viewReports') && (
+          <div className="ceo-attendance-section">
+            <div className="section-header">
+              <h2>Attendance Overview</h2>
+              <span className="section-subtitle">Level 2 & 3 Employees</span>
+            </div>
+            <div className="attendance-list">
+              {employeeAttendance.map((emp, idx) => (
+                <div key={idx} className="attendance-item">
+                  <div className="emp-avatar-small">
+                    {emp.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
+                  </div>
+                  <div className="emp-info">
+                    <span className="emp-name">{emp.name}</span>
+                    <span className="emp-role">{emp.role}</span>
+                  </div>
+                  <div className={`emp-status ${emp.status}`}>
+                    {emp.status === "present" ? "Present" : "On Leave"}
+                  </div>
+                  <span className="emp-checkin">{emp.checkIn}</span>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="attendance-list">
-            {employeeAttendance.map((emp, idx) => (
-              <div key={idx} className="attendance-item">
-                <div className="emp-avatar-small">
-                  {emp.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")}
-                </div>
-                <div className="emp-info">
-                  <span className="emp-name">{emp.name}</span>
-                  <span className="emp-role">{emp.role}</span>
-                </div>
-                <div className={`emp-status ${emp.status}`}>
-                  {emp.status === "present" ? "Present" : "On Leave"}
-                </div>
-                <span className="emp-checkin">{emp.checkIn}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        )}
 
         <div className="ceo-activity-section">
           <div className="section-header">
