@@ -75,6 +75,7 @@ const LeaveManagement = () => {
         const currentUserId = user?.id;
         const users = (data.users || [])
           .filter((u) => String(u._id) !== String(currentUserId))
+          .filter((u) => u.role!="ADMIN")
           .map((u) => ({
             id: u._id,
             name: u?.profile?.firstName
