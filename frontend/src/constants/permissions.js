@@ -107,13 +107,6 @@ export const NAVIGATION_ITEMS = [
     allowedRoles: ROLE_GROUPS_HELPER.MANAGERS,
   },
   {
-    id: "salary",
-    label: "Pay Slip",
-    icon: "DollarSign",
-    view: "salary",
-    allowedRoles: ["ACCOUNTANT", "EMPLOYEE"],
-  },
-  {
     id: "peer-rating",
     label: "Peer Rating",
     icon: "Star",
@@ -155,7 +148,13 @@ export const NAVIGATION_ITEMS = [
     view: "efiling",
     allowedRoles: ROLE_GROUPS_HELPER.MANAGERS,
   },
-
+  {
+    id: "salary",
+    label: "Pay Slip",
+    icon: "DollarSign",
+    view: "salary",
+    allowedRoles: ["ACCOUNTANT", "EMPLOYEE"],
+  },
   {
     id: "admin",
     label: "Admin Panel",
