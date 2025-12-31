@@ -4,10 +4,10 @@ import { usersAPI, authAPI, attendanceAPI, leaveAPI } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import "./Salary.css";
+import "./PaySlip.css";
 import { employeeRemunerationData } from "../data/employeeSalaryData";
 
-const Salary = () => {
+const PaySlip = () => {
   const { user, canAccessFeature } = useAuth();
   const [employees, setEmployees] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
@@ -299,7 +299,7 @@ const Salary = () => {
           emp.id === selectedEmployee.id ? selectedEmployee : emp
         )
       );
-      alert("Salary data saved successfully!");
+      alert("Pay slip data saved successfully!");
     } catch (error) {
       console.error("Save failed:", error);
       alert("Failed to save data. Please try again.");
@@ -311,7 +311,7 @@ const Salary = () => {
   const handleDownloadPDF = () => {
     if (!contentRef.current || !selectedEmployee) return;
 
-    const actionsDiv = document.querySelector(".salary-actions");
+    const actionsDiv = document.querySelector(".payslip-actions");
     const employeeSelector = document.querySelector(".employee-selector");
 
     if (actionsDiv) actionsDiv.style.display = "none";
@@ -345,7 +345,7 @@ const Salary = () => {
 
           pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
           pdf.save(
-            `Salary_Slip_${selectedEmployee.name}_${currentMonth}_${currentYear}.pdf`
+            `PaySlip_${selectedEmployee.name}_${currentMonth}_${currentYear}.pdf`
           );
 
           if (actionsDiv) actionsDiv.style.display = "flex";
@@ -376,9 +376,11 @@ const Salary = () => {
 
         // Fetch attendance
         const attendanceResponse = await fetch(
-          `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/attendance/user/${
-            selectedEmployee.id
-          }?month=${currentMonth + 1}&year=${currentYear}`,
+          `${
+            import.meta.env.VITE_API_URL || "http://localhost:5000"
+          }/api/attendance/user/${selectedEmployee.id}?month=${
+            currentMonth + 1
+          }&year=${currentYear}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -450,7 +452,7 @@ const Salary = () => {
 
   if (loading) {
     return (
-      <div className="salary-container">
+      <div className="payslip-container">
         <div className="loading">Loading employees...</div>
       </div>
     );
@@ -458,16 +460,16 @@ const Salary = () => {
 
   if (employees.length === 0) {
     return (
-      <div className="salary-container">
+      <div className="payslip-container">
         <div className="no-data">No employees found</div>
       </div>
     );
   }
 
   return (
-    <div className="salary-page-container">
+    <div className="payslip-page-container">
       {canViewAllSalaries && (
-        <div className="salary-actions">
+        <div className="payslip-actions">
           <div className="employee-selector">
             <label>Enter Employee Name:</label>
             <div className="search-input-wrapper">
@@ -515,7 +517,7 @@ const Salary = () => {
       )}
 
       {!canViewAllSalaries && selectedEmployee && (
-        <div className="salary-actions">
+        <div className="payslip-actions">
           <div className="action-buttons">
             <button
               className="action-btn download-btn"
@@ -530,18 +532,18 @@ const Salary = () => {
 
       {canViewAllSalaries && !selectedEmployee && (
         <div className="no-selection">
-          Please enter an employee name to view the salary slip.
+          Please enter an employee name to view the pay slip.
         </div>
       )}
 
       {selectedEmployee && (
-        <div className="salary-slip-container" ref={contentRef}>
+        <div className="payslip-slip-container" ref={contentRef}>
           <div className="slip-header">
             <div className="logo-section">
               <img
                 src="/National_Institute_of_Technology,_Raipur_Logo.png"
                 alt="NIT Raipur"
-                class="logo-left-salary"
+                class="logo-left-payslip"
               />
             </div>
             <div className="organization-info">
@@ -568,7 +570,7 @@ const Salary = () => {
               <img
                 src="/logo-NITRRFIE.png"
                 alt="NITRRFIE"
-                class="logo-right-salary"
+                class="logo-right-payslip"
               />
             </div>
           </div>
@@ -613,7 +615,7 @@ const Salary = () => {
             </tbody>
           </table>
 
-          <table className="salary-table">
+          <table className="payslip-table">
             <thead>
               <tr>
                 <th>Earnings</th>
@@ -753,7 +755,7 @@ const Salary = () => {
                   <strong>{calculateTotalDeductions().toFixed(2)}</strong>
                 </td>
               </tr>
-              <tr className="net-salary-row">
+              <tr className="net-payslip-row">
                 <td colSpan="1">
                   <strong>Net Salary (In Rs.)</strong>
                 </td>
@@ -766,7 +768,10 @@ const Salary = () => {
 
           <div className="signature-section">
             <div className="signature-block">
-              <p className="signature-title">This is a Computer Generated Salary Slip. Does not Require any Signature.</p>
+              <p className="signature-title">
+                This is a Computer Generated Salary Slip. Does not Require any
+                Signature.
+              </p>
             </div>
           </div>
         </div>
@@ -775,4 +780,4 @@ const Salary = () => {
   );
 };
 
-export default Salary;
+export default PaySlip;

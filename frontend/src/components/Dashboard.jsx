@@ -24,7 +24,7 @@ import PeerRating from "./PeerRating";
 import AttendanceRecord from "./AttendanceRecord";
 import LeaveManagement from "./LeaveManagement";
 import EmployeeManagement from "./EmployeeManagement";
-import Salary from "./Salary";
+import PaySlip from "./PaySlip";
 import EFiling from "./EFiling";
 import ProfileEdit from "./ProfileEdit";
 import AdminPanel from "./AdminPanel";
@@ -166,13 +166,13 @@ const Dashboard = ({ onLogout }) => {
     dashboardData.employeeAttendance.length > 0
       ? dashboardData.employeeAttendance
       : [
-        {
-          name: "No attendance records",
-          role: "",
-          status: "present",
-          checkIn: "-",
-        },
-      ];
+          {
+            name: "No attendance records",
+            role: "",
+            status: "present",
+            checkIn: "-",
+          },
+        ];
 
   const activities =
     dashboardData.activities.length > 0
@@ -184,7 +184,10 @@ const Dashboard = ({ onLogout }) => {
       <header className="ceo-header">
         <div className="ceo-header-left">
           <h1>Dashboard</h1>
-          <p>Welcome back, {user?.profile.firstName + " " + user?.profile.lastName || "CEO"}</p>
+          <p>
+            Welcome back,{" "}
+            {user?.profile.firstName + " " + user?.profile.lastName || "CEO"}
+          </p>
         </div>
       </header>
 
@@ -255,7 +258,7 @@ const Dashboard = ({ onLogout }) => {
       case "leave":
         return <LeaveManagement />;
       case "salary":
-        return <Salary />;
+        return <PaySlip />;
       case "peer-rating":
         return <PeerRating />;
       case "variable-remuneration":
@@ -291,15 +294,16 @@ const Dashboard = ({ onLogout }) => {
               return (
                 <button
                   key={item.id}
-                  className={`nav-item ${activeView === item.view ? "active" : ""
-                    }`}
+                  className={`nav-item ${
+                    activeView === item.view ? "active" : ""
+                  }`}
                   onClick={() => setActiveView(item.view)}
                 >
                   {IconComponent && <IconComponent size={20} />}
                   {isSidebarOpen && (
                     <>
                       <span>{item.label}</span>
-                      {item.view === 'leave' && pendingRequests.length >= 1 && (
+                      {item.view === "leave" && pendingRequests.length >= 1 && (
                         <span className="badge">{pendingRequests.length}</span>
                       )}
                     </>
@@ -345,13 +349,17 @@ const Dashboard = ({ onLogout }) => {
                       }}
                     />
                   ) : (
-                    user?.profile?.firstName?.[0]?.toUpperCase() || user?.username?.[0]?.toUpperCase() || "U"
+                    user?.profile?.firstName?.[0]?.toUpperCase() ||
+                    user?.username?.[0]?.toUpperCase() ||
+                    "U"
                   )}
                 </div>
-                <span className="user-name">{user?.profile?.firstName || user?.username || "User"}</span>
+                <span className="user-name">
+                  {user?.profile?.firstName || user?.username || "User"}
+                </span>
                 {showProfileMenu && (
                   <div className="profile-dropdown-menu">
-                    {canAccessComponent('profile') && (
+                    {canAccessComponent("profile") && (
                       <button
                         className="profile-menu-item"
                         onClick={(e) => {
