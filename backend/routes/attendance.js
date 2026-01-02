@@ -30,6 +30,14 @@ router.post("/check-in", protect, async (req, res) => {
       return res.status(400).json({ message: "Already checked in today" });
     }
 
+    // Prevent check-in if leave is already marked
+    if (existingAttendance && existingAttendance.status === 'on-leave') {
+      return res.status(400).json({ 
+        message: "Cannot check in - leave is already marked for today",
+        leaveRemark: existingAttendance.remarks 
+      });
+    }
+
     const now = new Date();
     const cutoffHour = 10;
     const cutoffMinute = 30;
