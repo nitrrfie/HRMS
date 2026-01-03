@@ -14,6 +14,14 @@ import { useAuth } from "../context/AuthContext";
 import { leaveAPI, usersAPI } from "../services/api";
 import "./LeaveManagement.css";
 
+const formatRole = (role) => {
+  if (!role) return "N/A";
+  return role
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+};
+
 const LeaveManagement = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("apply");
@@ -59,7 +67,7 @@ const LeaveManagement = () => {
   useEffect(() => {
     if (activeTab !== "requests") {
       fetchMyLeaves();
-    } 
+    }
     fetchPendingRequests();
   }, [activeTab]);
 
@@ -69,18 +77,18 @@ const LeaveManagement = () => {
 
   const fetchUsers = async () => {
     try {
-      // This endpoint is accessible to all authenticated users in this app.
       const data = await usersAPI.getForPeerRating();
       if (data.success) {
         const currentUserId = user?.id;
         const users = (data.users || [])
           .filter((u) => String(u._id) !== String(currentUserId))
-          .filter((u) => u.role!="ADMIN")
+          .filter((u) => u.role !== "ADMIN")
           .map((u) => ({
             id: u._id,
             name: u?.profile?.firstName
               ? `${u.profile.firstName} ${u.profile.lastName || ""}`.trim()
               : u.username || "Unknown",
+            role: formatRole(u.role), // Apply camel case formatting
           }))
           .sort((a, b) => a.name.localeCompare(b.name));
         setAvailableUsers(users);
@@ -170,15 +178,16 @@ const LeaveManagement = () => {
     }
 
     const requestedDays = Number(formData.numberOfDays || 0);
-    if(formData.leaveType === "Casual Leave"){
-      const remainingCasual=Number(leaveBalanceDisplay.casualLeave || 0);
-      if(!Number.isFinite(requestedDays) || requestedDays<=0){
-
+    if (formData.leaveType === "Casual Leave") {
+      const remainingCasual = Number(leaveBalanceDisplay.casualLeave || 0);
+      if (!Number.isFinite(requestedDays) || requestedDays <= 0) {
         alert("Please select a valid leave period.");
         return;
       }
-      if(requestedDays>remainingCasual){
-        alert(`Insufficient Casual Leave balance. Available : ${remainingCasual}, Requested: ${requestedDays}`);
+      if (requestedDays > remainingCasual) {
+        alert(
+          `Insufficient Casual Leave balance. Available : ${remainingCasual}, Requested: ${requestedDays}`
+        );
         return;
       }
     }
@@ -685,7 +694,7 @@ const LeaveManagement = () => {
                       <option value="">Select approver</option>
                       {availableUsers.map((u) => (
                         <option key={u.id} value={u.id}>
-                          {u.name}
+                          {u.role} - {u.name}
                         </option>
                       ))}
                     </select>
@@ -799,7 +808,7 @@ const LeaveManagement = () => {
                       <option value="">Select person in-charge</option>
                       {availableUsers.map((u) => (
                         <option key={u.id} value={u.name}>
-                          {u.name}
+                          {u.role} - {u.name}
                         </option>
                       ))}
                     </select>
