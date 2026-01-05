@@ -56,7 +56,7 @@ const EFiling = () => {
             console.log("Users: ", data.users);
             if (data.success) {
                 // Filter users: exclude current user and include only level 2 and above
-                const filteredByLevel = filterUsersByLevel(data.users, 2);
+                const filteredByLevel = filterUsersByLevel(data.users, 1);
                 const others = filteredByLevel.filter(emp =>
                     emp._id !== user?.id && emp.username !== user?.username
                 );
