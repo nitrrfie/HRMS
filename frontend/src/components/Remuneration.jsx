@@ -170,8 +170,6 @@ const Remuneration = () => {
         const halfDayMap = {};
 
         attendanceResults.forEach((result) => {
-          // console.log(`Result empid : ${result.employeeId}`);
-          // console.log(`Result pdays: ${result.presentDays}`);
           attendanceMap[result.employeeId] = result.presentDays;
           halfDayMap[result.employeeId] = result.halfDays;
         });
@@ -247,7 +245,6 @@ const Remuneration = () => {
             user => user.role !== 'FACULTY_IN_CHARGE' && user.role !== 'OFFICER_IN_CHARGE'
           );
           
-          console.log('Filtered users:', filteredUsers.length);
           
           setEmployees(filteredUsers.map(user => ({
             id: user._id,
@@ -482,6 +479,7 @@ const Remuneration = () => {
     let totalNetPayable = 0;
 
     employees.forEach((emp) => {
+      // console.log("Employee", emp);
       totalVariable += parseFloat(emp.variableRemuneration) || 0;
       totalTDS += parseFloat(emp.tds) || 0;
       totalOther += parseFloat(emp.otherDeduction) || 0;
@@ -520,12 +518,12 @@ const Remuneration = () => {
   };
 
   const calculateNetPayable = (emp) => {
-    const daysWorked = attendanceData[emp.employeeId] || 0;
     const grossRemuneration = parseFloat(emp.grossRemuneration) || 0;
+    const payableDays=calculatePayableDays(emp);
 
     // Net Payable = (Gross Salary / Total Days in Month) × Days Worked
     if (totalDaysInMonth === 0) return 0;
-    const netPayable = (grossRemuneration / totalDaysInMonth) * netPayableDays;
+    const netPayable = (grossRemuneration / totalDaysInMonth) * payableDays;
 
     return netPayable.toFixed(2);
   };
