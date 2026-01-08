@@ -58,7 +58,7 @@ const seedUsers = async () => {
           },
         },
         documents: {
-          pan: { number: "BHRPS4064A" },
+          pan: { number: "BHRPS4964A" },
           other: [],
         },
         bankDetails: {
@@ -259,7 +259,7 @@ const seedUsers = async () => {
           baseSalary: 10000,
         },
         documents: {
-          pan: { number: "CUTPV9394L" },
+          pan: { number: "CUTPV5804L" },
           other: [],
         },
         bankDetails: {
@@ -301,7 +301,7 @@ const seedUsers = async () => {
           baseSalary: 25000,
         },
         documents: {
-          pan: { number: "BSVPK8707R" },
+          pan: { number: "BSVPB8707R" },
           other: [],
         },
         bankDetails: {

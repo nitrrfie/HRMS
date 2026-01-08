@@ -369,7 +369,7 @@ const Remuneration = () => {
       otherDeduction: 0.0,
       netPayable: 80000.0,
       panBankDetails:
-        "PAN: BHRPS4064A\nBANK: IDBI Bank,\nCivil Lines, Raipur\nA/C: 0495104000146716\nIFSC:IBKL0000495",
+        "PAN: BHRPS4964A\nBANK: IDBI Bank,\nCivil Lines, Raipur\nA/C: 0495104000146716\nIFSC:IBKL0000495",
     },
     {
       id: 2,
@@ -438,7 +438,7 @@ const Remuneration = () => {
       otherDeduction: 0.0,
       netPayable: 10000.0,
       panBankDetails:
-        "PAN: CUTPV9394L\nBANK: State Bank of India,\nNesta, Tilda\nA/C: 39634349811\nIFSC: SBIN0001470",
+        "PAN: CUTPV5804L\nBANK: State Bank of India,\nNesta, Tilda\nA/C: 39634349811\nIFSC: SBIN0001470",
     },
     {
       id: 5,
@@ -461,7 +461,7 @@ const Remuneration = () => {
       otherDeduction: 0.0,
       netPayable: 25000.0,
       panBankDetails:
-        "PAN: BSVPK8707R\nBANK: Union Bank of India,\nBorsi, Durg\nA/C: 747902010017132\nIFSC: UBIN0576708",
+        "PAN: BSVPB8707R\nBANK: Union Bank of India,\nBorsi, Durg\nA/C: 747902010017132\nIFSC: UBIN0576708",
     },
   ]);
 
