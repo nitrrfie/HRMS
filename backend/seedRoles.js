@@ -60,11 +60,11 @@ const roleDefinitions = [
             { componentId: 'leave', componentName: 'Leave Management', hasAccess: true },
             { componentId: 'salary', componentName: 'Salary', hasAccess: false },
             { componentId: 'peer-rating', componentName: 'Peer Rating', hasAccess: true },
-            { componentId: 'variable-remuneration', componentName: 'Variable Remuneration', hasAccess: false },
+            { componentId: 'variable-remuneration', componentName: 'Variable Remuneration', hasAccess: true },
             { componentId: 'remuneration', componentName: 'Remuneration', hasAccess: true },
             { componentId: 'calendar', componentName: 'Calendar', hasAccess: true },
             { componentId: 'efiling', componentName: 'E-Filing', hasAccess: true },
-            { componentId: 'settings', componentName: 'Settings', hasAccess: true },
+            { componentId: 'settings', componentName: 'Settings', hasAccess: false },
             { componentId: 'profile', componentName: 'Profile', hasAccess: true },
             { componentId: 'admin', componentName: 'Admin Panel', hasAccess: false }
         ],
@@ -75,7 +75,8 @@ const roleDefinitions = [
             { featureId: 'leave.apply', featureName: 'Apply Leave', hasAccess: true },
             { featureId: 'attendance.mark', featureName: 'Mark Attendance', hasAccess: true },
             { featureId: 'attendance.viewReports', featureName: 'View Attendance Reports', hasAccess: true },
-            { featureId: 'remuneration.view', featureName: 'View Remuneration', hasAccess: true }
+            { featureId: 'remuneration.view', featureName: 'View Remuneration', hasAccess: true },
+            { featureId: 'remuneration.variable', featureName: 'Manage Variable Remuneration', hasAccess: true },
         ]
     },
     {
@@ -91,12 +92,12 @@ const roleDefinitions = [
             { componentId: 'attendance', componentName: 'Attendance', hasAccess: true },
             { componentId: 'leave', componentName: 'Leave Management', hasAccess: true },
             { componentId: 'salary', componentName: 'Salary', hasAccess: false },
-            { componentId: 'peer-rating', componentName: 'Peer Rating', hasAccess: false },
+            { componentId: 'peer-rating', componentName: 'Peer Rating', hasAccess: true },
             { componentId: 'variable-remuneration', componentName: 'Variable Remuneration', hasAccess: true },
             { componentId: 'remuneration', componentName: 'Remuneration', hasAccess: true },
             { componentId: 'calendar', componentName: 'Calendar', hasAccess: true },
             { componentId: 'efiling', componentName: 'E-Filing', hasAccess: true },
-            { componentId: 'settings', componentName: 'Settings', hasAccess: true },
+            { componentId: 'settings', componentName: 'Settings', hasAccess: false },
             { componentId: 'profile', componentName: 'Profile', hasAccess: true },
             { componentId: 'admin', componentName: 'Admin Panel', hasAccess: false }
         ],
@@ -123,13 +124,13 @@ const roleDefinitions = [
             { componentId: 'employees', componentName: 'Employee Management', hasAccess: true },
             { componentId: 'attendance', componentName: 'Attendance', hasAccess: true },
             { componentId: 'leave', componentName: 'Leave Management', hasAccess: true },
-            { componentId: 'salary', componentName: 'Salary', hasAccess: false },
+            { componentId: 'salary', componentName: 'Salary', hasAccess: true },
             { componentId: 'peer-rating', componentName: 'Peer Rating', hasAccess: true },
-            { componentId: 'variable-remuneration', componentName: 'Variable Remuneration', hasAccess: false },
+            { componentId: 'variable-remuneration', componentName: 'Variable Remuneration', hasAccess: true },
             { componentId: 'remuneration', componentName: 'Remuneration', hasAccess: true },
             { componentId: 'calendar', componentName: 'Calendar', hasAccess: true },
             { componentId: 'efiling', componentName: 'E-Filing', hasAccess: true },
-            { componentId: 'settings', componentName: 'Settings', hasAccess: true },
+            { componentId: 'settings', componentName: 'Settings', hasAccess: false },
             { componentId: 'profile', componentName: 'Profile', hasAccess: true },
             { componentId: 'admin', componentName: 'Admin Panel', hasAccess: false }
         ],
@@ -142,7 +143,8 @@ const roleDefinitions = [
             { featureId: 'leave.apply', featureName: 'Apply Leave', hasAccess: true },
             { featureId: 'attendance.mark', featureName: 'Mark Attendance', hasAccess: true },
             { featureId: 'attendance.viewReports', featureName: 'View Attendance Reports', hasAccess: true },
-            { featureId: 'remuneration.view', featureName: 'View Remuneration', hasAccess: true }
+            { featureId: 'remuneration.view', featureName: 'View Remuneration', hasAccess: true },
+            { featureId: 'remuneration.variable', featureName: 'Manage Variable Remuneration', hasAccess: true },
         ]
     },
     {
@@ -157,13 +159,13 @@ const roleDefinitions = [
             { componentId: 'employees', componentName: 'Employee Management', hasAccess: true },
             { componentId: 'attendance', componentName: 'Attendance', hasAccess: true },
             { componentId: 'leave', componentName: 'Leave Management', hasAccess: true },
-            { componentId: 'salary', componentName: 'Salary', hasAccess: false },
+            { componentId: 'salary', componentName: 'Salary', hasAccess: true },
             { componentId: 'peer-rating', componentName: 'Peer Rating', hasAccess: true },
             { componentId: 'variable-remuneration', componentName: 'Variable Remuneration', hasAccess: false },
             { componentId: 'remuneration', componentName: 'Remuneration', hasAccess: true },
             { componentId: 'calendar', componentName: 'Calendar', hasAccess: true },
             { componentId: 'efiling', componentName: 'E-Filing', hasAccess: true },
-            { componentId: 'settings', componentName: 'Settings', hasAccess: true },
+            { componentId: 'settings', componentName: 'Settings', hasAccess: false },
             { componentId: 'profile', componentName: 'Profile', hasAccess: true },
             { componentId: 'admin', componentName: 'Admin Panel', hasAccess: false }
         ],
@@ -174,7 +176,8 @@ const roleDefinitions = [
             { featureId: 'leave.apply', featureName: 'Apply Leave', hasAccess: true },
             { featureId: 'attendance.mark', featureName: 'Mark Attendance', hasAccess: true },
             { featureId: 'attendance.viewReports', featureName: 'View Attendance Reports', hasAccess: true },
-            { featureId: 'remuneration.view', featureName: 'View Remuneration', hasAccess: true }
+            { featureId: 'remuneration.view', featureName: 'View Remuneration', hasAccess: true },
+            { featureId: 'remuneration.variable', featureName: 'Manage Variable Remuneration', hasAccess: true },
         ]
     },
     {
@@ -191,16 +194,18 @@ const roleDefinitions = [
             { componentId: 'leave', componentName: 'Leave Management', hasAccess: true },
             { componentId: 'salary', componentName: 'Salary', hasAccess: true },
             { componentId: 'peer-rating', componentName: 'Peer Rating', hasAccess: true },
-            { componentId: 'variable-remuneration', componentName: 'Variable Remuneration', hasAccess: false },
+            { componentId: 'variable-remuneration', componentName: 'Variable Remuneration', hasAccess: true },
             { componentId: 'remuneration', componentName: 'Remuneration', hasAccess: true },
             { componentId: 'calendar', componentName: 'Calendar', hasAccess: true },
             { componentId: 'efiling', componentName: 'E-Filing', hasAccess: true },
-            { componentId: 'settings', componentName: 'Settings', hasAccess: true },
+            { componentId: 'settings', componentName: 'Settings', hasAccess: false },
             { componentId: 'profile', componentName: 'Profile', hasAccess: true },
             { componentId: 'admin', componentName: 'Admin Panel', hasAccess: false }
         ],
         featureAccess: [
+            { featureId: 'employee.create', featureName: 'Create Employee', hasAccess: true },
             { featureId: 'employee.edit', featureName: 'Edit Employee', hasAccess: true },
+            { featureId: 'employee.delete', featureName: 'Delete Employee', hasAccess: true },
             { featureId: 'employee.viewAll', featureName: 'View All Employees', hasAccess: true },
             { featureId: 'salary.viewAll', featureName: 'View All Salaries', hasAccess: true },
             { featureId: 'salary.edit', featureName: 'Edit Salary', hasAccess: true },
@@ -208,7 +213,8 @@ const roleDefinitions = [
             { featureId: 'leave.apply', featureName: 'Apply Leave', hasAccess: true },
             { featureId: 'attendance.mark', featureName: 'Mark Attendance', hasAccess: true },
             { featureId: 'attendance.viewReports', featureName: 'View Attendance Reports', hasAccess: true },
-            { featureId: 'remuneration.view', featureName: 'View Remuneration', hasAccess: true }
+            { featureId: 'remuneration.view', featureName: 'View Remuneration', hasAccess: true },
+            { featureId: 'remuneration.variable', featureName: 'Manage Variable Remuneration', hasAccess: true },
         ]
     },
     {
@@ -220,20 +226,24 @@ const roleDefinitions = [
         isActive: true,
         componentAccess: [
             { componentId: 'dashboard', componentName: 'Dashboard', hasAccess: true },
-            { componentId: 'employees', componentName: 'Employee Management', hasAccess: false },
-            { componentId: 'attendance', componentName: 'Attendance', hasAccess: false },
-            { componentId: 'leave', componentName: 'Leave Management', hasAccess: false },
+            { componentId: 'employees', componentName: 'Employee Management', hasAccess: true },
+            { componentId: 'attendance', componentName: 'Attendance', hasAccess: true },
+            { componentId: 'leave', componentName: 'Leave Management', hasAccess: true },
             { componentId: 'salary', componentName: 'Salary', hasAccess: true },
-            { componentId: 'peer-rating', componentName: 'Peer Rating', hasAccess: false },
+            { componentId: 'peer-rating', componentName: 'Peer Rating', hasAccess: true },
             { componentId: 'variable-remuneration', componentName: 'Variable Remuneration', hasAccess: false },
-            { componentId: 'remuneration', componentName: 'Remuneration', hasAccess: false },
-            { componentId: 'calendar', componentName: 'Calendar', hasAccess: false },
-            { componentId: 'efiling', componentName: 'E-Filing', hasAccess: false },
+            { componentId: 'remuneration', componentName: 'Remuneration', hasAccess: true },
+            { componentId: 'calendar', componentName: 'Calendar', hasAccess: true },
+            { componentId: 'efiling', componentName: 'E-Filing', hasAccess: true },
             { componentId: 'settings', componentName: 'Settings', hasAccess: false },
             { componentId: 'profile', componentName: 'Profile', hasAccess: true },
             { componentId: 'admin', componentName: 'Admin Panel', hasAccess: false }
         ],
         featureAccess: [
+            { featureId: 'attendance.mark', featureName: 'Mark Attendance', hasAccess: true },
+            { featureId: 'attendance.viewReports', featureName: 'View Attendance Reports', hasAccess: true },
+            { featureId: 'employee.viewAll', featureName: 'View All Employees', hasAccess: true },
+            { featureId: 'remuneration.view', featureName: 'View Remuneration', hasAccess: true },
             { featureId: 'salary.viewOwn', featureName: 'View Own Salary', hasAccess: true },
             { featureId: 'leave.apply', featureName: 'Apply Leave', hasAccess: true }
         ]
